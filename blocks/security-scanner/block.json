@@ -1,0 +1,42 @@
+{
+  "apiVersion": 2,
+  "name": "quickscan/security-scanner",
+  "title": "Security Scanner",
+  "category": "common",
+  "icon": "shield",
+  "description": "Add a security scanner form to scan websites for vulnerabilities",
+  "supports": {
+    "html": false,
+    "align": ["left", "center", "right", "wide", "full"]
+  },
+  "attributes": {
+    "scanType": {
+      "type": "string",
+      "default": "quick"
+    },
+    "showResults": {
+      "type": "boolean",
+      "default": true
+    },
+    "placeholder": {
+      "type": "string",
+      "default": "Enter website URL to scan..."
+    },
+    "buttonText": {
+      "type": "string",
+      "default": "Start Security Scan"
+    },
+    "title": {
+      "type": "string",
+      "default": "Website Security Scanner"
+    },
+    "showTitle": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "textdomain": "quickscan-connector",
+  "editorScript": "file:./index.compiled.js",
+  "editorStyle": "file:./editor.css",
+  "style": "file:./style.css"
+}

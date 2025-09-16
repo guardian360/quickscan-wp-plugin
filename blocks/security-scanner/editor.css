@@ -1,0 +1,76 @@
+/* Editor Block Styles */
+.quickscan-block-editor {
+    margin: 1rem 0;
+}
+
+.quickscan-block-preview {
+    background: #f8f9fa;
+    border: 2px dashed #0073aa;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.quickscan-block-preview h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.quickscan-form-preview {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+    margin-bottom: 1rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.quickscan-url-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #fff;
+    opacity: 0.7;
+}
+
+.quickscan-button {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+.quickscan-preview-note {
+    color: #666;
+    font-style: italic;
+    font-size: 0.9rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Responsive editor styles */
+@media (max-width: 768px) {
+    .quickscan-form-preview {
+        flex-direction: column;
+    }
+    
+    .quickscan-block-preview {
+        padding: 1.5rem;
+    }
+}

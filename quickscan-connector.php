@@ -1,0 +1,1053 @@
+<?php
+/**
+ * Plugin Name: Quickscan Connector
+ * Plugin URI: https://github.com/guardian360/quickscan
+ * Description: WordPress plugin to connect and interact with the Quickscan API for security scanning
+ * Version: 1.0.0
+ * Author: Guardian360
+ * Author URI: https://guardian360.nl
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: quickscan-connector
+ * Domain Path: /languages
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Define plugin constants
+define('QUICKSCAN_VERSION', '1.0.0');
+define('QUICKSCAN_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('QUICKSCAN_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('QUICKSCAN_PLUGIN_BASENAME', plugin_basename(__FILE__));
+
+/**
+ * Main Quickscan Connector Class
+ */
+class QuickscanConnector {
+    
+    /**
+     * Instance of this class
+     */
+    private static $instance = null;
+    
+    /**
+     * API Base URL - can be configured in settings
+     */
+    private $api_base_url = '';
+    
+    /**
+     * API Key for authentication
+     */
+    private $api_key = '';
+    
+    /**
+     * User email for Quickscan authentication
+     */
+    private $user_email = '';
+    
+    /**
+     * User password for Quickscan authentication
+     */
+    private $user_password = '';
+    
+    /**
+     * API token for authenticated requests
+     */
+    private $api_token = '';
+    
+    /**
+     * Get singleton instance
+     */
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        $this->init_hooks();
+        $this->load_settings();
+    }
+    
+    /**
+     * Initialize WordPress hooks
+     */
+    private function init_hooks() {
+        // Activation/Deactivation hooks
+        register_activation_hook(__FILE__, [$this, 'activate']);
+        register_deactivation_hook(__FILE__, [$this, 'deactivate']);
+        
+        // Admin hooks
+        add_action('admin_menu', [$this, 'add_admin_menu']);
+        add_action('admin_init', [$this, 'register_settings']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+        
+        // API hooks
+        add_action('rest_api_init', [$this, 'register_rest_routes']);
+        
+        // Shortcode for frontend display
+        add_shortcode('quickscan', [$this, 'render_quickscan_shortcode']);
+        
+        // AJAX handlers
+        add_action('wp_ajax_quickscan_start_scan', [$this, 'ajax_start_scan']);
+        add_action('wp_ajax_nopriv_quickscan_start_scan', [$this, 'ajax_start_scan']);
+        add_action('wp_ajax_quickscan_send_pdf', [$this, 'ajax_send_pdf']);
+        add_action('wp_ajax_nopriv_quickscan_send_pdf', [$this, 'ajax_send_pdf']);
+        add_action('wp_ajax_quickscan_test_connection', [$this, 'ajax_test_connection']);
+        add_action('wp_ajax_quickscan_save_credentials', [$this, 'ajax_save_credentials']);
+        add_action('wp_ajax_quickscan_test_credentials', [$this, 'ajax_test_credentials']);
+        
+        // Gutenberg blocks
+        add_action('init', [$this, 'register_blocks']);
+        
+        // Frontend assets
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
+        
+        // Widget registration
+        add_action('widgets_init', [$this, 'register_widgets']);
+        
+        // Load text domain for translations
+        add_action('plugins_loaded', [$this, 'load_textdomain']);
+    }
+    
+    /**
+     * Load settings from WordPress options
+     */
+    private function load_settings() {
+        // Always use the Guardian360 API v1 endpoint
+        $this->api_base_url = 'https://quickscan.guardian360.nl/api/v1';
+        
+        // User-specific credentials (per WordPress user)
+        $current_user_id = get_current_user_id();
+        if ($current_user_id) {
+            $this->user_email = get_user_meta($current_user_id, 'quickscan_email', true);
+            $this->user_password = get_user_meta($current_user_id, 'quickscan_password', true);
+            
+            // Decrypt password if stored
+            if ($this->user_password) {
+                $this->user_password = $this->decrypt_password($this->user_password);
+            }
+            
+            // User-specific token storage
+            $this->api_token = get_transient('quickscan_api_token_' . $current_user_id);
+        }
+    }
+    
+    /**
+     * Plugin activation
+     */
+    public function activate() {
+        // Create database tables if needed
+        // Tables not needed - using Quickscan API storage
+        
+        // Set default options
+        add_option('quickscan_enable_logging', true);
+        add_option('quickscan_show_signature', true);
+        add_option('quickscan_signature_text', __('Powered by Guardian360', 'quickscan-connector'));
+        
+        // Flush rewrite rules
+        flush_rewrite_rules();
+    }
+    
+    /**
+     * Plugin deactivation
+     */
+    public function deactivate() {
+        // Clean up scheduled tasks
+        wp_clear_scheduled_hook('quickscan_daily_scan');
+        
+        // Flush rewrite rules
+        flush_rewrite_rules();
+    }
+    
+    
+    /**
+     * Add admin menu items
+     */
+    public function add_admin_menu() {
+        // Main menu
+        add_menu_page(
+            __('Quickscan', 'quickscan-connector'),
+            __('Quickscan', 'quickscan-connector'),
+            'manage_options',
+            'quickscan',
+            [$this, 'render_dashboard_page'],
+            'dashicons-shield',
+            30
+        );
+        
+        // Submenu pages
+        add_submenu_page(
+            'quickscan',
+            __('Dashboard', 'quickscan-connector'),
+            __('Dashboard', 'quickscan-connector'),
+            'manage_options',
+            'quickscan',
+            [$this, 'render_dashboard_page']
+        );
+        
+        add_submenu_page(
+            'quickscan',
+            __('Start Scan', 'quickscan-connector'),
+            __('Start Scan', 'quickscan-connector'),
+            'manage_options',
+            'quickscan-start-scan',
+            [$this, 'render_start_scan_page']
+        );
+
+        add_submenu_page(
+            'quickscan',
+            __('Request Account', 'quickscan-connector'),
+            __('Request Account', 'quickscan-connector'),
+            'manage_options',
+            'quickscan-account-request',
+            [$this, 'render_account_request_page']
+        );
+
+        add_submenu_page(
+            'quickscan',
+            __('Settings', 'quickscan-connector'),
+            __('Settings', 'quickscan-connector'),
+            'manage_options',
+            'quickscan-settings',
+            [$this, 'render_settings_page']
+        );
+    }
+    
+    /**
+     * Register plugin settings
+     */
+    public function register_settings() {
+        register_setting('quickscan_settings', 'quickscan_enable_logging');
+        register_setting('quickscan_settings', 'quickscan_show_signature');
+    }
+    
+    
+    /**
+     * Enqueue admin assets
+     */
+    public function enqueue_admin_assets($hook) {
+        if (strpos($hook, 'quickscan') === false) {
+            return;
+        }
+        
+        wp_enqueue_style(
+            'quickscan-admin',
+            QUICKSCAN_PLUGIN_URL . 'assets/css/admin.css',
+            [],
+            QUICKSCAN_VERSION
+        );
+        
+        wp_enqueue_script(
+            'quickscan-admin',
+            QUICKSCAN_PLUGIN_URL . 'assets/js/admin.js',
+            ['jquery'],
+            QUICKSCAN_VERSION,
+            true
+        );
+        
+        wp_localize_script('quickscan-admin', 'quickscan_ajax', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('quickscan_nonce')
+        ]);
+    }
+    
+    /**
+     * Register REST API routes
+     */
+    public function register_rest_routes() {
+        register_rest_route('quickscan/v1', '/scan', [
+            'methods' => 'POST',
+            'callback' => [$this, 'rest_start_scan'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+        
+        register_rest_route('quickscan/v1', '/scan/(?P<id>[a-zA-Z0-9-]+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'rest_get_scan_status'],
+            'permission_callback' => '__return_true'
+        ]);
+    }
+    
+    /**
+     * Render dashboard page
+     */
+    public function render_dashboard_page() {
+        include QUICKSCAN_PLUGIN_DIR . 'templates/dashboard.php';
+    }
+    
+    /**
+     * Render start scan page
+     */
+    public function render_start_scan_page() {
+        include QUICKSCAN_PLUGIN_DIR . 'templates/start-scan.php';
+    }
+    
+    
+    
+    /**
+     * Render settings page
+     */
+    public function render_settings_page() {
+        include QUICKSCAN_PLUGIN_DIR . 'templates/settings.php';
+    }
+
+    /**
+     * Render account request page
+     */
+    public function render_account_request_page() {
+        include QUICKSCAN_PLUGIN_DIR . 'templates/account-request.php';
+    }
+
+    /**
+     * Render shortcode
+     */
+    public function render_quickscan_shortcode($atts) {
+        $atts = shortcode_atts([
+            'type' => 'quick',
+            'show_results' => 'true',
+            'title' => '',
+            'placeholder' => 'Enter website URL to scan...',
+            'button_text' => 'Start Security Scan'
+        ], $atts);
+        
+        ob_start();
+        include QUICKSCAN_PLUGIN_DIR . 'templates/shortcode.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * AJAX handler for starting scan
+     */
+    public function ajax_start_scan() {
+        // Log received data for debugging (only in debug mode)
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Quickscan AJAX received: ' . print_r($_POST, true));
+        }
+        
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+        
+        $url = sanitize_text_field($_POST['url'] ?? '');
+        $scan_type = sanitize_text_field($_POST['scan_type'] ?? 'quick');
+        $is_frontend = sanitize_text_field($_POST['is_frontend'] ?? 'false') === 'true';
+        
+        // Validate input
+        if (empty($url)) {
+            wp_send_json_error('URL is required');
+            return;
+        }
+        
+        // Call Quickscan API v1 with English language preference
+        $result = $this->call_api('POST', 'scan', [
+            'url' => $url,
+            'language' => 'en'
+        ]);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error('API Error: ' . $result->get_error_message());
+            return;
+        }
+        
+        if ($result) {
+            // Results are stored in user's Quickscan account - no local storage needed
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error('Failed to start scan - no response from API');
+        }
+    }
+    
+    /**
+     * AJAX handler for sending PDF via email
+     * This proxies the request to Quickscan which generates and sends the PDF
+     */
+    public function ajax_send_pdf() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+        
+        // Collect and sanitize form data
+        $email_data = [
+            'url' => sanitize_url($_POST['url'] ?? ''),
+            'company' => sanitize_text_field($_POST['company'] ?? ''),
+            'firstname' => sanitize_text_field($_POST['firstname'] ?? ''),
+            'surname' => sanitize_text_field($_POST['surname'] ?? ''),
+            'email' => sanitize_email($_POST['email'] ?? ''),
+            'phone' => sanitize_text_field($_POST['phone'] ?? ''),
+        ];
+        
+        // Validate required fields
+        $required_fields = ['url', 'company', 'firstname', 'surname', 'email'];
+        foreach ($required_fields as $field) {
+            if (empty($email_data[$field])) {
+                wp_send_json_error('Missing required field: ' . $field);
+                return;
+            }
+        }
+        
+        // Validate email format
+        if (!is_email($email_data['email'])) {
+            wp_send_json_error('Invalid email address');
+            return;
+        }
+        
+        // Forward request to Quickscan API - Quickscan handles PDF generation and email sending
+        $response = wp_remote_post('https://quickscan.guardian360.nl/scan/results', [
+            'body' => $email_data,
+            'timeout' => 30,
+            'headers' => [
+                'Accept' => 'application/json',
+            ]
+        ]);
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error('Failed to connect to Quickscan service: ' . $response->get_error_message());
+            return;
+        }
+        
+        $http_code = wp_remote_retrieve_response_code($response);
+        if ($http_code >= 200 && $http_code < 300) {
+            // Quickscan successfully received the request and will send the PDF
+            wp_send_json_success('PDF report will be sent to your email by Quickscan');
+        } else {
+            wp_send_json_error('Quickscan service error. Please try again later.');
+        }
+    }
+    
+    
+    /**
+     * Encrypt password for storage
+     */
+    private function encrypt_password($password) {
+        $key = defined('AUTH_KEY') ? AUTH_KEY : 'quickscan_default_key';
+        return base64_encode(openssl_encrypt($password, 'AES-256-CBC', $key, 0, substr(md5($key), 0, 16)));
+    }
+    
+    /**
+     * Decrypt password from storage
+     */
+    private function decrypt_password($encrypted_password) {
+        $key = defined('AUTH_KEY') ? AUTH_KEY : 'quickscan_default_key';
+        return openssl_decrypt(base64_decode($encrypted_password), 'AES-256-CBC', $key, 0, substr(md5($key), 0, 16));
+    }
+    
+    /**
+     * Save user credentials
+     */
+    public function save_user_credentials($email, $password, $use_wp_credentials = false) {
+        $current_user_id = get_current_user_id();
+        if (!$current_user_id) {
+            return false;
+        }
+        
+        if ($use_wp_credentials) {
+            $wp_user = get_userdata($current_user_id);
+            $email = $wp_user->user_email;
+            // For WordPress credentials, we'd need to handle password hashing differently
+            // This is a placeholder - password management would need more careful consideration
+            $password = wp_generate_password(12); // Generate a new password for Quickscan
+        }
+        
+        // Store encrypted credentials
+        update_user_meta($current_user_id, 'quickscan_email', sanitize_email($email));
+        update_user_meta($current_user_id, 'quickscan_password', $this->encrypt_password($password));
+        
+        // Clear any existing token to force re-authentication
+        delete_transient('quickscan_api_token_' . $current_user_id);
+        
+        return true;
+    }
+    
+    /**
+     * Authenticate with Guardian360 API and get token
+     */
+    private function authenticate() {
+        if (empty($this->user_email) || empty($this->user_password)) {
+            return new WP_Error('no_credentials', 'No Quickscan credentials found. Please configure your credentials in the settings.');
+        }
+        
+        $login_url = $this->api_base_url . '/login';
+        
+        $args = [
+            'method' => 'POST',
+            'body' => [
+                'email' => $this->user_email,
+                'password' => base64_encode($this->user_password)
+            ],
+            'timeout' => 30
+        ];
+        
+        $response = wp_remote_request($login_url, $args);
+        
+        if (is_wp_error($response)) {
+            $this->log_error('Authentication failed: ' . $response->get_error_message());
+            return false;
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $auth_data = json_decode($body, true);
+        
+        if (isset($auth_data['data']['token'])) {
+            $token = $auth_data['data']['token'];
+            $current_user_id = get_current_user_id();
+            // Store token for 1 hour (3600 seconds) per user
+            set_transient('quickscan_api_token_' . $current_user_id, $token, 3600);
+            $this->api_token = $token;
+            return true;
+        }
+        
+        $this->log_error('Authentication failed: Invalid credentials or response format');
+        return false;
+    }
+    
+    /**
+     * Ensure we have a valid API token
+     */
+    private function ensure_authenticated() {
+        if (empty($this->api_token)) {
+            return $this->authenticate();
+        }
+        return true;
+    }
+    
+    /**
+     * Call Quickscan API v1
+     */
+    private function call_api($method, $endpoint, $data = null) {
+        // Ensure we're authenticated
+        if (!$this->ensure_authenticated()) {
+            return new WP_Error('auth_failed', 'Failed to authenticate with Quickscan API');
+        }
+        
+        $url = trailingslashit($this->api_base_url) . ltrim($endpoint, '/');
+        
+        $args = [
+            'method' => $method,
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->api_token,
+                'Accept' => 'application/json'
+            ],
+            'timeout' => 120
+        ];
+        
+        // Handle data based on method
+        if ($data && !empty($data)) {
+            if ($method === 'GET') {
+                // For GET requests, add data as query parameters
+                $query_string = http_build_query($data);
+                $url .= (strpos($url, '?') !== false ? '&' : '?') . $query_string;
+            } elseif ($method === 'POST') {
+                // For scan endpoint, URL is passed as query parameter
+                if ($endpoint === 'scan' && isset($data['url'])) {
+                    $url .= '?url=' . urlencode($data['url']);
+                    unset($data['url']); // Remove from data since it's in query string
+                }
+                
+                // Add remaining data as form fields
+                if (!empty($data)) {
+                    $args['body'] = $data;
+                }
+            }
+        }
+        
+        $response = wp_remote_request($url, $args);
+        
+        if (is_wp_error($response)) {
+            $this->log_error('API call failed: ' . $response->get_error_message());
+            return $response;
+        }
+        
+        $http_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        
+        // If we get 401 (unauthorized), try to re-authenticate once
+        if ($http_code === 401) {
+            $current_user_id = get_current_user_id();
+            delete_transient('quickscan_api_token_' . $current_user_id);
+            $this->api_token = null;
+            
+            $auth_result = $this->authenticate();
+            if ($auth_result === true) {
+                // Retry the request with new token
+                $args['headers']['Authorization'] = 'Bearer ' . $this->api_token;
+                $response = wp_remote_request($url, $args);
+                
+                if (is_wp_error($response)) {
+                    return $response;
+                }
+                
+                $body = wp_remote_retrieve_body($response);
+            } else {
+                return is_wp_error($auth_result) ? $auth_result : new WP_Error('auth_failed', 'Failed to re-authenticate with Quickscan API');
+            }
+        }
+        
+        return json_decode($body, true);
+    }
+    
+    
+    
+    
+    /**
+     * AJAX handler for testing API connection
+     */
+    public function ajax_test_connection() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+        
+        // Test API connection by making a simple request
+        $test_result = $this->test_api_connection();
+        
+        if ($test_result['success']) {
+            wp_send_json_success($test_result['message']);
+        } else {
+            wp_send_json_error($test_result['message']);
+        }
+    }
+    
+    /**
+     * Test API connection
+     */
+    private function test_api_connection() {
+        // Try to make a test scan request to verify API is accessible
+        $test_url = 'https://example.com';
+        $result = $this->call_api('POST', '/scan', [
+            'url' => $test_url
+        ]);
+        
+        if (is_wp_error($result)) {
+            return [
+                'success' => false,
+                'message' => 'API connection failed: ' . $result->get_error_message()
+            ];
+        }
+        
+        if (isset($result['error'])) {
+            return [
+                'success' => false,
+                'message' => 'API error: ' . $result['error']
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'API connection successful!'
+        ];
+    }
+    
+    /**
+     * AJAX handler for saving user credentials
+     */
+    public function ajax_save_credentials() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+        
+        // Check user permissions
+        if (!current_user_can('manage_options') && !current_user_can('edit_posts')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+        
+        $email = sanitize_email($_POST['email'] ?? '');
+        $password = sanitize_text_field($_POST['password'] ?? '');
+        $use_wp_credentials = ($_POST['use_wp_credentials'] ?? '') === 'true';
+        
+        if (empty($email) || empty($password)) {
+            wp_send_json_error('Email and password are required');
+            return;
+        }
+        
+        if ($this->save_user_credentials($email, $password, $use_wp_credentials)) {
+            wp_send_json_success('Credentials saved successfully');
+        } else {
+            wp_send_json_error('Failed to save credentials');
+        }
+    }
+    
+    /**
+     * AJAX handler for testing user credentials
+     */
+    public function ajax_test_credentials() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+        
+        // Check user permissions
+        if (!current_user_can('manage_options') && !current_user_can('edit_posts')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+        
+        $email = sanitize_email($_POST['email'] ?? '');
+        $password = sanitize_text_field($_POST['password'] ?? '');
+        
+        if (empty($email) || empty($password)) {
+            wp_send_json_error('Email and password are required');
+            return;
+        }
+        
+        // Test credentials by attempting to authenticate
+        $login_url = $this->api_base_url . '/login';
+        
+        $args = [
+            'method' => 'POST',
+            'body' => [
+                'email' => $email,
+                'password' => base64_encode($password)
+            ],
+            'timeout' => 30
+        ];
+        
+        $response = wp_remote_request($login_url, $args);
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error('Connection failed: ' . $response->get_error_message());
+            return;
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $auth_data = json_decode($body, true);
+        
+        if (isset($auth_data['data']['token'])) {
+            wp_send_json_success('Credentials are valid!');
+        } else {
+            wp_send_json_error('Invalid credentials. Please check your email and password.');
+        }
+    }
+    
+    /**
+     * Register Gutenberg blocks
+     */
+    public function register_blocks() {
+        // Check if function exists (Gutenberg is active)
+        if (!function_exists('register_block_type')) {
+            return;
+        }
+        
+        // Register the security scanner block
+        $block_args = array(
+            'api_version' => 2,
+            'title' => __('Security Scanner', 'quickscan-connector'),
+            'description' => __('Add a security scanner form to scan websites for vulnerabilities', 'quickscan-connector'),
+            'category' => 'common',
+            'icon' => 'shield',
+            'keywords' => array('security', 'scan', 'quickscan', 'vulnerability'),
+            'supports' => array(
+                'html' => false,
+                'align' => array('left', 'center', 'right', 'wide', 'full')
+            ),
+            'attributes' => array(
+                'scanType' => array(
+                    'type' => 'string',
+                    'default' => 'quick'
+                ),
+                'showResults' => array(
+                    'type' => 'boolean', 
+                    'default' => true
+                ),
+                'placeholder' => array(
+                    'type' => 'string',
+                    'default' => 'Enter website URL to scan...'
+                ),
+                'buttonText' => array(
+                    'type' => 'string',
+                    'default' => 'Start Security Scan'
+                ),
+                'title' => array(
+                    'type' => 'string',
+                    'default' => 'Website Security Scanner'
+                ),
+                'showTitle' => array(
+                    'type' => 'boolean',
+                    'default' => true
+                )
+            ),
+            'editor_script' => 'quickscan-block-editor',
+            'editor_style' => 'quickscan-block-editor-style',
+            'style' => 'quickscan-block-style',
+            'render_callback' => array($this, 'render_security_scanner_block')
+        );
+        
+        register_block_type('quickscan/security-scanner', $block_args);
+        
+        // Enqueue block editor assets
+        add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
+    }
+    
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueue_frontend_assets() {
+        // Block styles (for both editor and frontend)
+        wp_enqueue_style(
+            'quickscan-block-style',
+            QUICKSCAN_PLUGIN_URL . 'blocks/security-scanner/style.css',
+            [],
+            QUICKSCAN_VERSION
+        );
+        
+        // Frontend CSS for Guardian360-style results
+        wp_enqueue_style(
+            'quickscan-frontend',
+            QUICKSCAN_PLUGIN_URL . 'assets/css/frontend.css',
+            [],
+            QUICKSCAN_VERSION
+        );
+        
+        // Frontend JavaScript
+        wp_enqueue_script(
+            'quickscan-frontend',
+            QUICKSCAN_PLUGIN_URL . 'assets/js/frontend.js',
+            [],
+            QUICKSCAN_VERSION,
+            true
+        );
+        
+        wp_localize_script('quickscan-frontend', 'quickscan_frontend', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('quickscan_nonce'),
+            'show_signature' => get_option('quickscan_show_signature', true),
+            'signature_text' => __('Powered by Guardian360', 'quickscan-connector'),
+            'strings' => [
+                'enter_valid_url' => __('Please enter a valid URL', 'quickscan-connector'),
+                'scanning' => __('Scanning...', 'quickscan-connector'),
+                'scan_completed' => __('✓ Scan completed successfully!', 'quickscan-connector'),
+                'scan_failed' => __('✗ Scan failed:', 'quickscan-connector'),
+                'security_score' => __('Security Score', 'quickscan-connector'),
+                'scanned_url' => __('Scanned URL:', 'quickscan-connector'),
+                'security_headers' => __('Security Headers', 'quickscan-connector'),
+                'configured' => __('Configured', 'quickscan-connector'),
+                'missing' => __('Missing', 'quickscan-connector'),
+                'security_issues' => __('Security Issues & Recommendations', 'quickscan-connector'),
+                'how_to_fix' => __('💡 How to Fix This', 'quickscan-connector'),
+                'dns_security' => __('DNS Security', 'quickscan-connector'),
+                'issue' => __('Issue', 'quickscan-connector'),
+                'no_misconfigurations' => __('✓ No major security misconfigurations detected', 'quickscan-connector'),
+                'technical_details' => __('View Technical Details', 'quickscan-connector'),
+                'gdpr_notice' => __('This scan is performed in real-time and results are not stored on our servers. Your data is processed according to GDPR regulations.', 'quickscan-connector'),
+                'email_pdf' => __('Email PDF Report', 'quickscan-connector'),
+                'company' => __('Company', 'quickscan-connector'),
+                'first_name' => __('First Name', 'quickscan-connector'),
+                'last_name' => __('Last Name', 'quickscan-connector'),
+                'email' => __('Email Address', 'quickscan-connector'),
+                'phone' => __('Phone', 'quickscan-connector'),
+                'optional' => __('optional', 'quickscan-connector'),
+                'privacy_notice' => __('Your information will be used solely to email you the PDF report. We respect your privacy and will not share your data with third parties.', 'quickscan-connector'),
+                'cancel' => __('Cancel', 'quickscan-connector'),
+                'send_pdf' => __('Send PDF Report', 'quickscan-connector'),
+                'sending' => __('Sending...', 'quickscan-connector'),
+                'email_sent' => __('Email Sent!', 'quickscan-connector'),
+                'check_email' => __('Please check your email for the PDF security report.', 'quickscan-connector'),
+                'close' => __('Close', 'quickscan-connector'),
+                'try_again' => __('Try Again', 'quickscan-connector')
+            ]
+        ]);
+    }
+    
+    /**
+     * Enqueue block editor assets
+     */
+    public function enqueue_block_editor_assets() {
+        wp_enqueue_script(
+            'quickscan-block-editor',
+            QUICKSCAN_PLUGIN_URL . 'blocks/security-scanner/index.compiled.js',
+            array('wp-blocks', 'wp-i18n', 'wp-element', 'wp-editor', 'wp-components'),
+            QUICKSCAN_VERSION,
+            true
+        );
+        
+        wp_enqueue_style(
+            'quickscan-block-editor-style',
+            QUICKSCAN_PLUGIN_URL . 'blocks/security-scanner/editor.css',
+            array(),
+            QUICKSCAN_VERSION
+        );
+    }
+    
+    /**
+     * Render security scanner block on frontend
+     */
+    public function render_security_scanner_block($attributes, $content) {
+        $defaults = array(
+            'scanType' => 'quick',
+            'showResults' => true,
+            'placeholder' => 'Enter website URL to scan...',
+            'buttonText' => 'Start Security Scan',
+            'title' => 'Website Security Scanner',
+            'showTitle' => true
+        );
+        
+        $attributes = wp_parse_args($attributes, $defaults);
+        
+        ob_start();
+        ?>
+        <div class="wp-block-quickscan-security-scanner">
+            <div class="quickscan-frontend-block"
+                 data-scan-type="<?php echo esc_attr($attributes['scanType']); ?>"
+                 data-show-results="<?php echo $attributes['showResults'] ? 'true' : 'false'; ?>"
+                 data-placeholder="<?php echo esc_attr($attributes['placeholder']); ?>"
+                 data-button-text="<?php echo esc_attr($attributes['buttonText']); ?>"
+                 data-title="<?php echo esc_attr($attributes['title']); ?>"
+                 data-show-title="<?php echo $attributes['showTitle'] ? 'true' : 'false'; ?>">
+                <!-- Content will be rendered by frontend JavaScript -->
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+    
+    /**
+     * Register widgets
+     */
+    public function register_widgets() {
+        register_widget('Quickscan_Security_Widget');
+    }
+    
+    /**
+     * Load text domain for translations
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain(
+            'quickscan-connector',
+            false,
+            dirname(QUICKSCAN_PLUGIN_BASENAME) . '/languages/'
+        );
+    }
+    
+    /**
+     * Log error messages
+     */
+    private function log_error($message) {
+        if (get_option('quickscan_enable_logging')) {
+            error_log('[Quickscan Connector] ' . $message);
+        }
+    }
+}
+
+/**
+ * Security Scanner Widget
+ */
+class Quickscan_Security_Widget extends WP_Widget {
+    
+    public function __construct() {
+        parent::__construct(
+            'quickscan_security_widget',
+            __('Security Scanner', 'quickscan-connector'),
+            [
+                'description' => __('Add a security scanner form to scan websites for vulnerabilities', 'quickscan-connector'),
+                'classname' => 'quickscan-security-widget'
+            ]
+        );
+    }
+    
+    public function widget($args, $instance) {
+        echo $args['before_widget'];
+        
+        $title = !empty($instance['title']) ? $instance['title'] : '';
+        $title = apply_filters('widget_title', $title, $instance, $this->id_base);
+        
+        if ($title) {
+            echo $args['before_title'] . $title . $args['after_title'];
+        }
+        
+        $scan_type = !empty($instance['scan_type']) ? $instance['scan_type'] : 'quick';
+        $show_results = isset($instance['show_results']) ? (bool) $instance['show_results'] : false;
+        $placeholder = !empty($instance['placeholder']) ? $instance['placeholder'] : 'Enter website URL...';
+        $button_text = !empty($instance['button_text']) ? $instance['button_text'] : 'Scan';
+        
+        echo '<div class="quickscan-widget" 
+                data-scan-type="' . esc_attr($scan_type) . '"
+                data-show-results="' . ($show_results ? 'true' : 'false') . '"
+                data-placeholder="' . esc_attr($placeholder) . '"
+                data-button-text="' . esc_attr($button_text) . '"
+                data-show-title="false">
+              </div>';
+        
+        echo $args['after_widget'];
+    }
+    
+    public function form($instance) {
+        $title = isset($instance['title']) ? $instance['title'] : __('Security Scanner', 'quickscan-connector');
+        $scan_type = isset($instance['scan_type']) ? $instance['scan_type'] : 'quick';
+        $show_results = isset($instance['show_results']) ? (bool) $instance['show_results'] : false;
+        $placeholder = isset($instance['placeholder']) ? $instance['placeholder'] : 'Enter website URL...';
+        $button_text = isset($instance['button_text']) ? $instance['button_text'] : 'Scan';
+        ?>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('title')); ?>"><?php _e('Title:', 'quickscan-connector'); ?></label>
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('title')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('title')); ?>" 
+                   type="text" value="<?php echo esc_attr($title); ?>">
+        </p>
+        
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('placeholder')); ?>"><?php _e('Placeholder Text:', 'quickscan-connector'); ?></label>
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('placeholder')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('placeholder')); ?>" 
+                   type="text" value="<?php echo esc_attr($placeholder); ?>">
+        </p>
+        
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('button_text')); ?>"><?php _e('Button Text:', 'quickscan-connector'); ?></label>
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('button_text')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('button_text')); ?>" 
+                   type="text" value="<?php echo esc_attr($button_text); ?>">
+        </p>
+        
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('scan_type')); ?>"><?php _e('Scan Type:', 'quickscan-connector'); ?></label>
+            <select class="widefat" id="<?php echo esc_attr($this->get_field_id('scan_type')); ?>" 
+                    name="<?php echo esc_attr($this->get_field_name('scan_type')); ?>">
+                <option value="quick" <?php selected($scan_type, 'quick'); ?>><?php _e('Quick Scan', 'quickscan-connector'); ?></option>
+                <option value="full" <?php selected($scan_type, 'full'); ?>><?php _e('Full Scan', 'quickscan-connector'); ?></option>
+            </select>
+        </p>
+        
+        <p>
+            <input type="checkbox" class="checkbox" id="<?php echo esc_attr($this->get_field_id('show_results')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('show_results')); ?>" 
+                   value="1" <?php checked($show_results, true); ?>>
+            <label for="<?php echo esc_attr($this->get_field_id('show_results')); ?>"><?php _e('Show results on page', 'quickscan-connector'); ?></label>
+            <br><small><?php _e('If unchecked, results will be shown in a popup or redirect to results page', 'quickscan-connector'); ?></small>
+        </p>
+        <?php
+    }
+    
+    public function update($new_instance, $old_instance) {
+        $instance = [];
+        $instance['title'] = !empty($new_instance['title']) ? sanitize_text_field($new_instance['title']) : '';
+        $instance['scan_type'] = !empty($new_instance['scan_type']) ? sanitize_text_field($new_instance['scan_type']) : 'quick';
+        $instance['show_results'] = !empty($new_instance['show_results']);
+        $instance['placeholder'] = !empty($new_instance['placeholder']) ? sanitize_text_field($new_instance['placeholder']) : 'Enter website URL...';
+        $instance['button_text'] = !empty($new_instance['button_text']) ? sanitize_text_field($new_instance['button_text']) : 'Scan';
+        
+        return $instance;
+    }
+}
+
+// Initialize the plugin
+add_action('plugins_loaded', function() {
+    QuickscanConnector::get_instance();
+});

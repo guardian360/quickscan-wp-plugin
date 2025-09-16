@@ -1,0 +1,339 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Quickscan Connector 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/guardian360/quickscan\n"
+"POT-Creation-Date: 2025-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+# Plugin headers
+msgid "Quickscan Connector"
+msgstr ""
+
+msgid "WordPress plugin to connect and interact with the Quickscan API for security scanning"
+msgstr ""
+
+msgid "Guardian360"
+msgstr ""
+
+# Menu items
+msgid "Quickscan"
+msgstr ""
+
+msgid "Dashboard"
+msgstr ""
+
+msgid "Start Scan"
+msgstr ""
+
+msgid "Scan Results"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+# Dashboard page
+msgid "Quickscan Dashboard"
+msgstr ""
+
+msgid "Welcome to Quickscan Security Scanner"
+msgstr ""
+
+msgid "Quickscan is a comprehensive security scanning tool that analyzes websites for vulnerabilities, misconfigurations, and security best practices. It checks:"
+msgstr ""
+
+msgid "Security Headers"
+msgstr ""
+
+msgid "SSL/TLS Configuration"
+msgstr ""
+
+msgid "DNS Security"
+msgstr ""
+
+msgid "Server Misconfigurations"
+msgstr ""
+
+msgid "How to Use Quickscan in Your WordPress Site:"
+msgstr ""
+
+msgid "1. Admin Scanning"
+msgstr ""
+
+msgid "Use \"Start Scan\" in the admin menu to scan any website and view detailed results."
+msgstr ""
+
+msgid "Start Scan Now"
+msgstr ""
+
+msgid "2. Gutenberg Block"
+msgstr ""
+
+msgid "Add the \"Security Scanner\" block to any page or post for visitors to scan websites."
+msgstr ""
+
+msgid "Search for \"Security Scanner\" in the block editor"
+msgstr ""
+
+msgid "3. Widget Areas"
+msgstr ""
+
+msgid "Add the \"Security Scanner\" widget to sidebars, footers, or any widget area."
+msgstr ""
+
+msgid "Manage Widgets"
+msgstr ""
+
+msgid "4. Shortcodes"
+msgstr ""
+
+msgid "Use shortcodes anywhere: [quickscan] or customize with attributes."
+msgstr ""
+
+msgid "Total Scans"
+msgstr ""
+
+msgid "Completed Scans"
+msgstr ""
+
+msgid "Pending Scans"
+msgstr ""
+
+msgid "Recent Scans"
+msgstr ""
+
+msgid "Scan ID"
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "View"
+msgstr ""
+
+msgid "No scans found. Start your first scan!"
+msgstr ""
+
+msgid "Start New Scan"
+msgstr ""
+
+# Settings page
+msgid "API Configuration"
+msgstr ""
+
+msgid "This plugin automatically connects to the Guardian360 Quickscan API:"
+msgstr ""
+
+msgid "API Endpoint:"
+msgstr ""
+
+msgid "No additional configuration is required. The plugin is ready to use!"
+msgstr ""
+
+msgid "Enable Logging"
+msgstr ""
+
+msgid "Log API errors and debug information"
+msgstr ""
+
+msgid "Show Guardian360 Signature"
+msgstr ""
+
+msgid "Show Guardian360 signature below scanner"
+msgstr ""
+
+msgid "Display a small Guardian360 link below frontend scanners. Help support the project!"
+msgstr ""
+
+msgid "Connection Test"
+msgstr ""
+
+msgid "Click the button below to test your API connection settings."
+msgstr ""
+
+msgid "Test Connection"
+msgstr ""
+
+# Scan form
+msgid "Security Scan"
+msgstr ""
+
+msgid "Website URL"
+msgstr ""
+
+msgid "Website URL:"
+msgstr ""
+
+msgid "Enter the full URL of the website you want to scan"
+msgstr ""
+
+msgid "Scan Type"
+msgstr ""
+
+msgid "Quick Scan"
+msgstr ""
+
+msgid "Full Scan"
+msgstr ""
+
+msgid "Choose the type of security scan to perform"
+msgstr ""
+
+msgid "Start Security Scan"
+msgstr ""
+
+msgid "Scan Progress"
+msgstr ""
+
+msgid "Starting scan..."
+msgstr ""
+
+msgid "Scanning..."
+msgstr ""
+
+msgid "Scan completed successfully!"
+msgstr ""
+
+msgid "Scan failed. Please try again."
+msgstr ""
+
+# Frontend JavaScript strings
+msgid "Please enter a valid URL"
+msgstr ""
+
+msgid "✓ Scan completed successfully!"
+msgstr ""
+
+msgid "✗ Scan failed:"
+msgstr ""
+
+msgid "Security Score"
+msgstr ""
+
+msgid "Scanned URL:"
+msgstr ""
+
+msgid "Configured"
+msgstr ""
+
+msgid "Missing"
+msgstr ""
+
+msgid "Security Issues & Recommendations"
+msgstr ""
+
+msgid "💡 How to Fix This"
+msgstr ""
+
+msgid "Issue"
+msgstr ""
+
+msgid "✓ No major security misconfigurations detected"
+msgstr ""
+
+msgid "View Technical Details"
+msgstr ""
+
+# Results page
+msgid "Scan Details"
+msgstr ""
+
+msgid "Created"
+msgstr ""
+
+msgid "View Details"
+msgstr ""
+
+msgid "No scan results found."
+msgstr ""
+
+msgid "Start Your First Scan"
+msgstr ""
+
+msgid "← Back to All Results"
+msgstr ""
+
+# Widget
+msgid "Security Scanner"
+msgstr ""
+
+msgid "Add a security scanner form to scan websites for vulnerabilities"
+msgstr ""
+
+msgid "Title:"
+msgstr ""
+
+msgid "Placeholder Text:"
+msgstr ""
+
+msgid "Button Text:"
+msgstr ""
+
+msgid "Show results on page"
+msgstr ""
+
+msgid "If unchecked, results will be shown in a popup or redirect to results page"
+msgstr ""
+
+# Signature
+msgid "Powered by Guardian360"
+msgstr ""
+
+# Block
+msgid "Website Security Scanner"
+msgstr ""
+
+msgid "Enter website URL to scan..."
+msgstr ""
+
+msgid "Show Title"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Placeholder Text"
+msgstr ""
+
+msgid "Button Text"
+msgstr ""
+
+msgid "Show Results on Page"
+msgstr ""
+
+msgid "If disabled, results will be shown in a popup or redirect to results page"
+msgstr ""
+
+msgid "Scanner Settings"
+msgstr ""
+
+msgid "Security Scanner Preview - Scan type:"
+msgstr ""
+
+# GDPR Compliance
+msgid "This scan is performed in real-time and results are not stored on our servers. Your data is processed according to GDPR regulations."
+msgstr ""

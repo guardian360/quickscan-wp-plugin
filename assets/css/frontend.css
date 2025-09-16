@@ -1,0 +1,347 @@
+/* Guardian360-style Quickscan Results */
+.quickscan-results-table {
+    width: 100%;
+    margin-bottom: 20px;
+    background-color: transparent;
+    border-collapse: collapse;
+}
+
+.quickscan-results-table th,
+.quickscan-results-table td {
+    padding: 8px;
+    line-height: 1.42857143;
+    vertical-align: top;
+    border: 1px solid #ddd;
+}
+
+.quickscan-results-table th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #ddd;
+    font-weight: bold;
+}
+
+/* Background colors for different sections */
+.bg-guardian {
+    background-color: #337ab7;
+    color: white;
+}
+
+.bg-high {
+    background-color: #d9534f;
+    color: white;
+}
+
+.bg-medium {
+    background-color: #f0ad4e;
+    color: white;
+}
+
+.bg-low {
+    background-color: #f0ad4e;
+    color: white;
+}
+
+.bg-green {
+    background-color: #5cb85c;
+    color: white;
+}
+
+/* Status labels */
+.label {
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+
+.label-success {
+    background-color: #5cb85c;
+}
+
+.label-danger {
+    background-color: #d9534f;
+}
+
+.label-warning {
+    background-color: #f0ad4e;
+}
+
+.label-info {
+    background-color: #5bc0de;
+}
+
+/* Progress bar styling */
+.progress {
+    height: 20px;
+    margin-bottom: 0;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+}
+
+.progress-bar {
+    float: left;
+    width: 0;
+    height: 100%;
+    font-size: 12px;
+    line-height: 20px;
+    color: #fff;
+    text-align: center;
+    background-color: #337ab7;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.15);
+    transition: width .6s ease;
+}
+
+.progress-bar-success {
+    background-color: #5cb85c;
+}
+
+.progress-bar-warning {
+    background-color: #f0ad4e;
+}
+
+.progress-bar-danger {
+    background-color: #d9534f;
+}
+
+/* Collapsible row styles */
+.quickscan-results-table tr.collapsible {
+    cursor: pointer;
+}
+
+.quickscan-results-table tr.collapsible:hover {
+    background-color: #f5f5f5;
+}
+
+.quickscan-results-table tr.details {
+    display: none;
+}
+
+.quickscan-results-table tr.safe {
+    /* Optional: add subtle styling for safe items */
+}
+
+/* Pull right for icons */
+.pull-right {
+    float: right !important;
+}
+
+/* Font Awesome icons */
+.fa {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.fa-angle-left:before {
+    content: "\f104";
+}
+
+.fa-angle-down:before {
+    content: "\f107";
+}
+
+/* If FontAwesome is not available, use simple arrows */
+.fa-angle-left:not(.fa):before,
+.fa-angle-down:not(.fa):before {
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+}
+
+.fa-angle-left:not(.fa):before {
+    content: "▶";
+}
+
+.fa-angle-down:not(.fa):before {
+    content: "▼";
+}
+
+/* Table responsive */
+.table-responsive {
+    min-height: .01%;
+    overflow-x: auto;
+}
+
+@media screen and (max-width: 767px) {
+    .table-responsive {
+        width: 100%;
+        margin-bottom: 15px;
+        overflow-y: hidden;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        border: 1px solid #ddd;
+    }
+    
+    .table-responsive > .table {
+        margin-bottom: 0;
+    }
+    
+    .table-responsive > .table > thead > tr > th,
+    .table-responsive > .table > tbody > tr > th,
+    .table-responsive > .table > tfoot > tr > th,
+    .table-responsive > .table > thead > tr > td,
+    .table-responsive > .table > tbody > tr > td,
+    .table-responsive > .table > tfoot > tr > td {
+        white-space: nowrap;
+    }
+}
+
+/* Form styling */
+.quickscan-form-container {
+    margin-bottom: 20px;
+}
+
+.quickscan-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.quickscan-url-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.quickscan-button {
+    padding: 8px 16px;
+    background-color: #337ab7;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.quickscan-button:hover {
+    background-color: #286090;
+}
+
+.quickscan-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.quickscan-loading {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: quickscan-spin 1s ease-in-out infinite;
+    margin-right: 5px;
+}
+
+@keyframes quickscan-spin {
+    to { transform: rotate(360deg); }
+}
+
+.quickscan-status {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+}
+
+.quickscan-status .success {
+    color: #5cb85c;
+    font-weight: bold;
+}
+
+.quickscan-status .error {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+/* Signature styling */
+.quickscan-signature {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.quickscan-signature a {
+    color: #666;
+    text-decoration: none;
+}
+
+.quickscan-signature a:hover {
+    color: #337ab7;
+    text-decoration: underline;
+}
+
+/* Results container */
+.quickscan-results {
+    margin-top: 20px;
+}
+
+.quickscan-results h4 {
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #337ab7;
+    padding-bottom: 5px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .quickscan-input-group {
+        flex-direction: column;
+    }
+    
+    .quickscan-url-input {
+        margin-bottom: 10px;
+    }
+    
+    .quickscan-results-table {
+        font-size: 14px;
+    }
+    
+    .quickscan-results-table th,
+    .quickscan-results-table td {
+        padding: 6px;
+    }
+    
+    .pull-right {
+        float: none !important;
+        display: inline-block;
+        margin-left: 5px;
+    }
+}
+
+/* GDPR Notice styling (already included inline, but adding for consistency) */
+.quickscan-gdpr-notice {
+    background: #f0f6fc;
+    border: 1px solid #0969da;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+    color: #0969da;
+}
+
+.quickscan-gdpr-notice strong {
+    font-weight: 600;
+}
+
+.quickscan-gdpr-notice a {
+    color: #0969da;
+    text-decoration: underline;
+}
+
+.quickscan-gdpr-notice a:hover {
+    text-decoration: none;
+}
