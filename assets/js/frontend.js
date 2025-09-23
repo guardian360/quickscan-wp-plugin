@@ -187,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderQuickscanForm(container) {
         // Get settings from data attributes
-        const scanType = container.dataset.scanType || 'quick';
         const showResults = container.dataset.showResults !== 'false';
         const placeholder = container.dataset.placeholder || 'Enter website URL to scan...';
         const buttonText = container.dataset.buttonText || 'Start Security Scan';
@@ -239,12 +238,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const emailButton = container.querySelector('.quickscan-email-button');
 
         button.addEventListener('click', function() {
-            startScan(container, scanType, showResults);
+            startScan(container, showResults);
         });
 
         input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                startScan(container, scanType, showResults);
+                startScan(container, showResults);
             }
         });
 
@@ -256,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function startScan(container, scanType, showResults) {
+    function startScan(container, showResults) {
         const input = container.querySelector('.quickscan-url-input');
         const button = container.querySelector('.quickscan-button');
         const statusDiv = container.querySelector('.quickscan-status');
@@ -284,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = new FormData();
         data.append('action', 'quickscan_start_scan');
         data.append('url', url);
-        data.append('scan_type', scanType);
         data.append('nonce', quickscan_ajax.nonce);
         data.append('is_frontend', 'true');
 
@@ -349,11 +347,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.success) {
                 content.innerHTML = response.data;
             } else {
+                console.warn('Frontend formatting failed:', response);
                 // Fallback to simple display if formatting fails
                 displayResultsFallback(content, data);
             }
         })
         .catch(error => {
+            console.warn('Frontend formatting error:', error);
             // Fallback to simple display on error
             displayResultsFallback(content, data);
         });

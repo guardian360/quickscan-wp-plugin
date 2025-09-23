@@ -5,7 +5,6 @@ if (!defined('ABSPATH')) {
 }
 
 // Get shortcode attributes
-$scan_type = $atts['type'];
 $show_results = $atts['show_results'] === 'true';
 $title = isset($atts['title']) ? $atts['title'] : '';
 $placeholder = isset($atts['placeholder']) ? $atts['placeholder'] : 'Enter website URL to scan...';
@@ -13,7 +12,6 @@ $button_text = isset($atts['button_text']) ? $atts['button_text'] : 'Start Secur
 ?>
 
 <div class="quickscan-frontend-block"
-     data-scan-type="<?php echo esc_attr($scan_type); ?>"
      data-show-results="<?php echo $show_results ? 'true' : 'false'; ?>"
      data-placeholder="<?php echo esc_attr($placeholder); ?>"
      data-button-text="<?php echo esc_attr($button_text); ?>"

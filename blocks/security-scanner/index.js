@@ -6,7 +6,7 @@ import { __ } from '@wordpress/i18n';
 registerBlockType('quickscan/security-scanner', {
     edit: (props) => {
         const { attributes, setAttributes } = props;
-        const { scanType, showResults, placeholder, buttonText, title, showTitle } = attributes;
+        const { showResults, placeholder, buttonText, title, showTitle } = attributes;
         
         const blockProps = useBlockProps({
             className: 'quickscan-block-editor'
@@ -38,15 +38,6 @@ registerBlockType('quickscan/security-scanner', {
                             value={buttonText}
                             onChange={(value) => setAttributes({ buttonText: value })}
                         />
-                        <SelectControl
-                            label={__('Scan Type', 'quickscan-connector')}
-                            value={scanType}
-                            options={[
-                                { label: __('Quick Scan', 'quickscan-connector'), value: 'quick' },
-                                { label: __('Full Scan', 'quickscan-connector'), value: 'full' }
-                            ]}
-                            onChange={(value) => setAttributes({ scanType: value })}
-                        />
                         <ToggleControl
                             label={__('Show Results on Page', 'quickscan-connector')}
                             checked={showResults}
@@ -71,7 +62,7 @@ registerBlockType('quickscan/security-scanner', {
                             </button>
                         </div>
                         <p className="quickscan-preview-note">
-                            ⚡ {__('Security Scanner Preview - Scan type:', 'quickscan-connector')} {scanType}
+                            ⚡ {__('Security Scanner Preview', 'quickscan-connector')}
                         </p>
                     </div>
                 </div>
@@ -87,9 +78,8 @@ registerBlockType('quickscan/security-scanner', {
 
         return (
             <div {...blockProps}>
-                <div 
+                <div
                     className="quickscan-frontend-block"
-                    data-scan-type={attributes.scanType}
                     data-show-results={attributes.showResults}
                     data-placeholder={attributes.placeholder}
                     data-button-text={attributes.buttonText}

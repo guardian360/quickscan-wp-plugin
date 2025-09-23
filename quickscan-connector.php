@@ -135,7 +135,7 @@ class QuickscanConnector {
         add_action('widgets_init', [$this, 'register_widgets']);
         
         // Load text domain for translations
-        add_action('plugins_loaded', [$this, 'load_textdomain']);
+        add_action('init', [$this, 'load_textdomain']);
     }
     
     /**
@@ -372,7 +372,6 @@ class QuickscanConnector {
      */
     public function render_quickscan_shortcode($atts) {
         $atts = shortcode_atts([
-            'type' => 'quick',
             'show_results' => 'true',
             'title' => '',
             'placeholder' => 'Enter website URL to scan...',
@@ -400,7 +399,6 @@ class QuickscanConnector {
         }
         
         $url = sanitize_text_field($_POST['url'] ?? '');
-        $scan_type = sanitize_text_field($_POST['scan_type'] ?? 'quick');
         $is_frontend = sanitize_text_field($_POST['is_frontend'] ?? 'false') === 'true';
         
         // Validate input
@@ -1001,10 +999,6 @@ class QuickscanConnector {
                 'align' => array('left', 'center', 'right', 'wide', 'full')
             ),
             'attributes' => array(
-                'scanType' => array(
-                    'type' => 'string',
-                    'default' => 'quick'
-                ),
                 'showResults' => array(
                     'type' => 'boolean', 
                     'default' => true
@@ -1144,7 +1138,6 @@ class QuickscanConnector {
      */
     public function render_security_scanner_block($attributes, $content) {
         $defaults = array(
-            'scanType' => 'quick',
             'showResults' => true,
             'placeholder' => 'Enter website URL to scan...',
             'buttonText' => 'Start Security Scan',
@@ -1158,7 +1151,6 @@ class QuickscanConnector {
         ?>
         <div class="wp-block-quickscan-security-scanner">
             <div class="quickscan-frontend-block"
-                 data-scan-type="<?php echo esc_attr($attributes['scanType']); ?>"
                  data-show-results="<?php echo $attributes['showResults'] ? 'true' : 'false'; ?>"
                  data-placeholder="<?php echo esc_attr($attributes['placeholder']); ?>"
                  data-button-text="<?php echo esc_attr($attributes['buttonText']); ?>"
@@ -1225,13 +1217,11 @@ class Quickscan_Security_Widget extends WP_Widget {
             echo $args['before_title'] . $title . $args['after_title'];
         }
         
-        $scan_type = !empty($instance['scan_type']) ? $instance['scan_type'] : 'quick';
         $show_results = isset($instance['show_results']) ? (bool) $instance['show_results'] : false;
         $placeholder = !empty($instance['placeholder']) ? $instance['placeholder'] : 'Enter website URL...';
         $button_text = !empty($instance['button_text']) ? $instance['button_text'] : 'Scan';
-        
-        echo '<div class="quickscan-widget" 
-                data-scan-type="' . esc_attr($scan_type) . '"
+
+        echo '<div class="quickscan-widget"
                 data-show-results="' . ($show_results ? 'true' : 'false') . '"
                 data-placeholder="' . esc_attr($placeholder) . '"
                 data-button-text="' . esc_attr($button_text) . '"
@@ -1243,7 +1233,6 @@ class Quickscan_Security_Widget extends WP_Widget {
     
     public function form($instance) {
         $title = isset($instance['title']) ? $instance['title'] : __('Security Scanner', 'quickscan-connector');
-        $scan_type = isset($instance['scan_type']) ? $instance['scan_type'] : 'quick';
         $show_results = isset($instance['show_results']) ? (bool) $instance['show_results'] : false;
         $placeholder = isset($instance['placeholder']) ? $instance['placeholder'] : 'Enter website URL...';
         $button_text = isset($instance['button_text']) ? $instance['button_text'] : 'Scan';
@@ -1269,14 +1258,6 @@ class Quickscan_Security_Widget extends WP_Widget {
                    type="text" value="<?php echo esc_attr($button_text); ?>">
         </p>
         
-        <p>
-            <label for="<?php echo esc_attr($this->get_field_id('scan_type')); ?>"><?php _e('Scan Type:', 'quickscan-connector'); ?></label>
-            <select class="widefat" id="<?php echo esc_attr($this->get_field_id('scan_type')); ?>" 
-                    name="<?php echo esc_attr($this->get_field_name('scan_type')); ?>">
-                <option value="quick" <?php selected($scan_type, 'quick'); ?>><?php _e('Quick Scan', 'quickscan-connector'); ?></option>
-                <option value="full" <?php selected($scan_type, 'full'); ?>><?php _e('Full Scan', 'quickscan-connector'); ?></option>
-            </select>
-        </p>
         
         <p>
             <input type="checkbox" class="checkbox" id="<?php echo esc_attr($this->get_field_id('show_results')); ?>" 
@@ -1291,7 +1272,6 @@ class Quickscan_Security_Widget extends WP_Widget {
     public function update($new_instance, $old_instance) {
         $instance = [];
         $instance['title'] = !empty($new_instance['title']) ? sanitize_text_field($new_instance['title']) : '';
-        $instance['scan_type'] = !empty($new_instance['scan_type']) ? sanitize_text_field($new_instance['scan_type']) : 'quick';
         $instance['show_results'] = !empty($new_instance['show_results']);
         $instance['placeholder'] = !empty($new_instance['placeholder']) ? sanitize_text_field($new_instance['placeholder']) : 'Enter website URL...';
         $instance['button_text'] = !empty($new_instance['button_text']) ? sanitize_text_field($new_instance['button_text']) : 'Scan';

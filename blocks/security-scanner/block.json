@@ -10,10 +10,6 @@
     "align": ["left", "center", "right", "wide", "full"]
   },
   "attributes": {
-    "scanType": {
-      "type": "string",
-      "default": "quick"
-    },
     "showResults": {
       "type": "boolean",
       "default": true

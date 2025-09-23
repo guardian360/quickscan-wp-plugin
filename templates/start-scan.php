@@ -41,20 +41,6 @@ if (!defined('ABSPATH')) {
                 </td>
             </tr>
             
-            <tr>
-                <th scope="row">
-                    <label for="scan_type"><?php _e('Scan Type', 'quickscan-connector'); ?></label>
-                </th>
-                <td>
-                    <select id="scan_type" name="scan_type">
-                        <option value="quick"><?php _e('Quick Scan', 'quickscan-connector'); ?></option>
-                        <option value="full"><?php _e('Full Scan', 'quickscan-connector'); ?></option>
-                    </select>
-                    <p class="description">
-                        <?php _e('Choose the type of security scan to perform', 'quickscan-connector'); ?>
-                    </p>
-                </td>
-            </tr>
         </table>
         
         <p class="submit">
@@ -99,10 +85,9 @@ jQuery(document).ready(function($) {
         
         // Get form data
         var url = $('#scan_url').val();
-        var scanType = $('#scan_type').val();
         var nonce = $('#quickscan_nonce').val();
-        
-        console.log('Form data:', { url: url, scanType: scanType, nonce: nonce });
+
+        console.log('Form data:', { url: url, nonce: nonce });
         
         // Validate URL
         if (!url) {
@@ -122,7 +107,6 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'quickscan_start_scan',
                 url: url,
-                scan_type: scanType,
                 is_frontend: 'false',
                 nonce: nonce
             },

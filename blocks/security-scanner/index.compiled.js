@@ -16,10 +16,6 @@
         category: 'widgets',
         description: __('Add a security scanner form to scan websites for vulnerabilities', 'quickscan-connector'),
         attributes: {
-            scanType: {
-                type: 'string',
-                default: 'quick'
-            },
             showResults: {
                 type: 'boolean',
                 default: true
@@ -49,7 +45,6 @@
         edit: function(props) {
             var attributes = props.attributes;
             var setAttributes = props.setAttributes;
-            var scanType = attributes.scanType;
             var showResults = attributes.showResults;
             var placeholder = attributes.placeholder;
             var buttonText = attributes.buttonText;
@@ -94,17 +89,6 @@
                                 setAttributes({ buttonText: value });
                             }
                         }),
-                        el(SelectControl, {
-                            label: __('Scan Type', 'quickscan-connector'),
-                            value: scanType,
-                            options: [
-                                { label: __('Quick Scan', 'quickscan-connector'), value: 'quick' },
-                                { label: __('Full Scan', 'quickscan-connector'), value: 'full' }
-                            ],
-                            onChange: function(value) {
-                                setAttributes({ scanType: value });
-                            }
-                        }),
                         el(ToggleControl, {
                             label: __('Show Results on Page', 'quickscan-connector'),
                             checked: showResults,
@@ -132,8 +116,7 @@
                     ]),
                     el('p', { className: 'quickscan-preview-note' }, [
                         '⚡ ',
-                        __('Security Scanner Preview - Scan type: ', 'quickscan-connector'),
-                        scanType
+                        __('Security Scanner Preview', 'quickscan-connector')
                     ])
                 ])
             ]);
@@ -148,7 +131,6 @@
             return el('div', blockProps,
                 el('div', {
                     className: 'quickscan-frontend-block',
-                    'data-scan-type': attributes.scanType,
                     'data-show-results': attributes.showResults,
                     'data-placeholder': attributes.placeholder,
                     'data-button-text': attributes.buttonText,

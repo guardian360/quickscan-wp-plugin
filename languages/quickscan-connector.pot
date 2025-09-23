@@ -191,17 +191,6 @@ msgstr ""
 msgid "Enter the full URL of the website you want to scan"
 msgstr ""
 
-msgid "Scan Type"
-msgstr ""
-
-msgid "Quick Scan"
-msgstr ""
-
-msgid "Full Scan"
-msgstr ""
-
-msgid "Choose the type of security scan to perform"
-msgstr ""
 
 msgid "Start Security Scan"
 msgstr ""

@@ -315,6 +315,8 @@ class Quickscan_Results_Formatter {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
             line-height: 1.5;
             color: #23282d;
+            max-width: 100%;
+            margin: 20px 0;
         }
 
         .quickscan-section {
@@ -338,6 +340,19 @@ class Quickscan_Results_Formatter {
         .quickscan-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: auto;
+            word-wrap: break-word;
+        }
+
+        /* Responsive table for smaller screens */
+        @media (max-width: 768px) {
+            .quickscan-table {
+                font-size: 14px;
+            }
+
+            .quickscan-table td {
+                padding: 8px 12px;
+            }
         }
 
         .quickscan-table tr {
