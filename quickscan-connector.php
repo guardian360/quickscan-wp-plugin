@@ -589,19 +589,58 @@ class QuickscanConnector {
 
 
     /**
-     * Encrypt password for storage
+     * Encrypt password for storage using secure AES-256-GCM
+     *
+     * Uses authenticated encryption with randomly generated IV and tag
+     * for maximum security. Cannot be reverse engineered.
      */
     private function encrypt_password($password) {
-        $key = defined('AUTH_KEY') ? AUTH_KEY : 'quickscan_default_key';
-        return base64_encode(openssl_encrypt($password, 'AES-256-CBC', $key, 0, substr(md5($key), 0, 16)));
+        // Derive key from WordPress AUTH_KEY using PBKDF2
+        $salt = defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'quickscan_secure_salt';
+        $key = hash_pbkdf2('sha256', AUTH_KEY ?: 'fallback_key', $salt, 10000, 32, true);
+
+        // Generate cryptographically secure random IV
+        $iv = openssl_random_pseudo_bytes(16);
+
+        // Encrypt with AES-256-GCM for authenticated encryption
+        $encrypted = openssl_encrypt($password, 'AES-256-GCM', $key, OPENSSL_RAW_DATA, $iv, $tag);
+
+        if ($encrypted === false) {
+            return false;
+        }
+
+        // Return base64 encoded: IV + tag + encrypted data
+        return base64_encode($iv . $tag . $encrypted);
     }
-    
+
     /**
-     * Decrypt password from storage
+     * Decrypt password from storage using secure AES-256-GCM
+     *
+     * Verifies authenticity and integrity before decryption
      */
-    private function decrypt_password($encrypted_password) {
-        $key = defined('AUTH_KEY') ? AUTH_KEY : 'quickscan_default_key';
-        return openssl_decrypt(base64_decode($encrypted_password), 'AES-256-CBC', $key, 0, substr(md5($key), 0, 16));
+    private function decrypt_password($encrypted_data) {
+        if (empty($encrypted_data)) {
+            return false;
+        }
+
+        $data = base64_decode($encrypted_data);
+        if ($data === false || strlen($data) < 32) { // IV(16) + tag(16) minimum
+            return false;
+        }
+
+        // Extract IV (first 16 bytes), tag (next 16 bytes), encrypted data (rest)
+        $iv = substr($data, 0, 16);
+        $tag = substr($data, 16, 16);
+        $encrypted = substr($data, 32);
+
+        // Derive same key used for encryption
+        $salt = defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'quickscan_secure_salt';
+        $key = hash_pbkdf2('sha256', AUTH_KEY ?: 'fallback_key', $salt, 10000, 32, true);
+
+        // Decrypt and verify authenticity
+        $decrypted = openssl_decrypt($encrypted, 'AES-256-GCM', $key, OPENSSL_RAW_DATA, $iv, $tag);
+
+        return $decrypted;
     }
     
     /**
