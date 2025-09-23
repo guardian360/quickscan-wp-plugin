@@ -6,27 +6,48 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="wrap">
-    <h1><?php _e('Request Quickscan Account Access', 'quickscan-connector'); ?></h1>
+    <!-- Official Guardian360 Quickscan Branding Header -->
+    <div style="text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 2px solid #e5e5e5;">
+        <div style="margin-bottom: 15px;">
+            <img src="<?php echo QUICKSCAN_PLUGIN_URL; ?>assets/images/logo_guardian360_quickscan.png"
+                 alt="Guardian360 Quickscan"
+                 style="height: 60px; width: auto;" />
+        </div>
+        <div>
+            <h1 style="margin: 0 0 5px 0; font-size: 28px; color: #2E3285;"><?php _e('Request Quickscan Account Access', 'quickscan-connector'); ?></h1>
+        </div>
+    </div>
 
-    <div class="quickscan-account-request-container">
-        <!-- Information Section -->
-        <div class="card" style="margin: 20px 0; max-width: 800px;">
-            <h2><?php _e('Professional Security Scanning Platform', 'quickscan-connector'); ?></h2>
+    <!-- Centered Content Container -->
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
 
-            <div class="notice notice-info inline">
-                <p><strong><?php _e('Quality Assurance Process', 'quickscan-connector'); ?></strong></p>
-                <p><?php _e('To ensure the highest quality of service and maintain the integrity of our security scanning platform, we personally review each account request. This allows us to:', 'quickscan-connector'); ?></p>
-                <ul style="margin-left: 20px;">
-                    <li><?php _e('Provide personalized onboarding and support', 'quickscan-connector'); ?></li>
-                    <li><?php _e('Ensure optimal configuration for your specific needs', 'quickscan-connector'); ?></li>
-                    <li><?php _e('Maintain the security and reliability of our scanning infrastructure', 'quickscan-connector'); ?></li>
-                    <li><?php _e('Offer tailored recommendations based on your website profile', 'quickscan-connector'); ?></li>
-                </ul>
-            </div>
+        <!-- Responsive Layout CSS -->
+        <style>
+        .quickscan-account-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
 
-            <div class="quickscan-benefits" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00a0d2; margin: 20px 0;">
+        @media (min-width: 1024px) {
+            .quickscan-account-grid {
+                grid-template-columns: 2fr 1fr;
+                gap: 40px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .quickscan-account-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+        }
+        </style>
+        <div class="card" style="max-width:100%;">
+                      <div class="quickscan-benefits" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00a0d2; margin: 20px 0;">
                 <h3><?php _e('Benefits of Your Quickscan Account', 'quickscan-connector'); ?></h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; margin-top: 10px;">
                     <div>
                         <h4><?php _e('🔍 Advanced Security Scanning', 'quickscan-connector'); ?></h4>
                         <p><?php _e('Comprehensive vulnerability detection and security analysis', 'quickscan-connector'); ?></p>
@@ -45,44 +66,17 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
             </div>
-        </div>
+      </div>
+        <div class="quickscan-account-grid">
+            <!-- Main Information Section -->
+            <div>
+                <div class="card" style="margin: 0 0 20px 0; width:100%;max-width:100%;">
+            <h2><?php _e('Professional Security Scanning Platform', 'quickscan-connector'); ?></h2>
 
-        <!-- Timeline Section -->
-        <div class="card" style="margin: 20px 0; max-width: 800px;">
-            <h3><?php _e('Account Approval Process', 'quickscan-connector'); ?></h3>
-            <div class="quickscan-timeline" style="margin: 20px 0;">
-                <div style="display: flex; align-items: center; margin: 10px 0;">
-                    <div style="background: #00a0d2; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">1</div>
-                    <div>
-                        <strong><?php _e('Submit Request', 'quickscan-connector'); ?></strong> - <?php _e('Complete the form below with your details', 'quickscan-connector'); ?>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; margin: 10px 0;">
-                    <div style="background: #00a0d2; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">2</div>
-                    <div>
-                        <strong><?php _e('Review Process', 'quickscan-connector'); ?></strong> - <?php _e('Our team reviews your request (typically within 24 hours)', 'quickscan-connector'); ?>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; margin: 10px 0;">
-                    <div style="background: #00a0d2; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">3</div>
-                    <div>
-                        <strong><?php _e('Account Activation', 'quickscan-connector'); ?></strong> - <?php _e('Receive your credentials and welcome information via email', 'quickscan-connector'); ?>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; margin: 10px 0;">
-                    <div style="background: #46b450; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">✓</div>
-                    <div>
-                        <strong><?php _e('Start Scanning', 'quickscan-connector'); ?></strong> - <?php _e('Begin securing your websites with professional-grade security analysis', 'quickscan-connector'); ?>
-                    </div>
-                </div>
+            <div class="notice notice-info inline">
+                <p><strong><?php _e('Quality Assurance Process', 'quickscan-connector'); ?></strong></p>
+                <p><?php _e('To ensure the highest quality of service and maintain the integrity of our security scanning platform, we personally review each account request.', 'quickscan-connector'); ?></p>
             </div>
-        </div>
-
-        <!-- Account Request Form -->
-        <div class="card" style="margin: 20px 0; max-width: 800px;">
-            <h3><?php _e('Account Request Form', 'quickscan-connector'); ?></h3>
-            <p><?php _e('Please complete the form below to request access to your Quickscan security scanning account. All information is securely transmitted and processed.', 'quickscan-connector'); ?></p>
-
             <!-- Embedded Zoho Form -->
             <div class="quickscan-form-container" style="margin: 20px 0;">
                 <div id="zf_div_OCmRQubppJrTZMWzGX_61hFmw8d8oVVwnktMCPgpUV4">
@@ -99,16 +93,68 @@ if (!defined('ABSPATH')) {
             </div>
         </div>
 
-        <!-- Support Section -->
-        <div class="card" style="margin: 20px 0; max-width: 800px; background: #f0f0f1;">
-            <h3><?php _e('Need Help?', 'quickscan-connector'); ?></h3>
-            <p><?php _e('If you have any questions about the account request process or need technical support, please don\'t hesitate to contact us:', 'quickscan-connector'); ?></p>
-            <ul style="margin-left: 20px;">
-                <li><strong><?php _e('Email:', 'quickscan-connector'); ?></strong> <a href="mailto:support@guardian360.nl">support@guardian360.nl</a></li>
-                <li><strong><?php _e('Website:', 'quickscan-connector'); ?></strong> <a href="https://guardian360.nl" target="_blank">guardian360.nl</a></li>
-            </ul>
+
+            </div>
+
+            <!-- Sidebar Section -->
+            <div>
+              
+                      <!-- Timeline Section -->
+        <div class="card" style="margin: 20px 0; max-width: 800px;">
+            <h3><?php _e('Account Approval Process', 'quickscan-connector'); ?></h3>
+            <div class="quickscan-timeline" style="margin: 20px 0;">
+                <div style="display: flex; align-items: center; margin: 10px 0;padding-left:50px;">
+                    <div style="background: #00a0d2; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; left:15px; position:absolute;">1</div>
+                    <div>
+                        <strong><?php _e('Submit Request', 'quickscan-connector'); ?></strong> - <?php _e('Complete the form below with your details', 'quickscan-connector'); ?>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; margin: 10px 0;padding-left:50px;">
+                    <div style="background: #00a0d2; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; left:15px; position:absolute;">2</div>
+                    <div>
+                        <strong><?php _e('Review Process', 'quickscan-connector'); ?></strong> - <?php _e('Our team reviews your request (typically within 24 hours)', 'quickscan-connector'); ?>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; margin: 10px 0;padding-left:50px;">
+                    <div style="background: #00a0d2; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; left:15px; position:absolute;">3</div>
+                    <div>
+                        <strong><?php _e('Account Activation', 'quickscan-connector'); ?></strong> - <?php _e('Receive your credentials and welcome information via email', 'quickscan-connector'); ?>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; margin: 10px 0;padding-left:50px;">
+                    <div style="background: #46b450; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; left:15px; position:absolute;">✓</div>
+                    <div>
+                        <strong><?php _e('Start Scanning', 'quickscan-connector'); ?></strong> - <?php _e('Begin securing your websites with professional-grade security analysis', 'quickscan-connector'); ?>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+
+                <!-- Resources -->
+                <div class="card" style="margin: 0 0 20px 0;">
+                    <h3><?php _e('Resources', 'quickscan-connector'); ?></h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin: 10px 0;"><a href="https://guardian360.eu/quickscan" target="_blank">🌐 <?php _e('Quickscan Platform', 'quickscan-connector'); ?></a></li>
+                        <li style="margin: 10px 0;"><a href="https://github.com/guardian360/quickscan-wp-plugin" target="_blank">📚 <?php _e('Documentation', 'quickscan-connector'); ?></a></li>
+                        <li style="margin: 10px 0;"><a href="https://guardian360.nl/privacy" target="_blank">🔏 <?php _e('Privacy Policy', 'quickscan-connector'); ?></a></li>
+                        <li style="margin: 10px 0;"><a href="https://quickscan.guardian360.nl/terms" target="_blank">📋 <?php _e('Terms of Service', 'quickscan-connector'); ?></a></li>
+                    </ul>
+                </div>
+
+                <!-- Need Help Section -->
+                <div class="card" style="margin: 0;">
+                    <h3><?php _e('Need Help?', 'quickscan-connector'); ?></h3>
+                    <div class="help-item">
+                        <h4>📧 <?php _e('Email Support', 'quickscan-connector'); ?></h4>
+                        <p><?php _e('Questions about account setup or scanning features?', 'quickscan-connector'); ?></p>
+                        <p><a href="mailto:support@guardian360.nl" class="button button-secondary"><?php _e('Contact Support', 'quickscan-connector'); ?></a></p>
+                    </div>
+                </div>
+            </div>
+
+
+        </div> <!-- End Account Grid -->
+    </div> <!-- End Centered Content Container -->
 </div>
 
 <script type="text/javascript">
@@ -156,7 +202,7 @@ if (!defined('ABSPATH')) {
   f.src = ifrmSrc;
   f.style.border="none";
   f.style.height="1009px";
-  f.style.width="90%";
+  f.style.width="100%";
   f.style.transition="all 0.5s ease";
   f.setAttribute("aria-label", 'Request a Quickscan account');
 

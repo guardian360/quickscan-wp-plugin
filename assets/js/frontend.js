@@ -27,34 +27,151 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="quickscan-modal-overlay"></div>
                     <div class="quickscan-modal-content">
                         <button class="quickscan-modal-close">&times;</button>
-                        <h3>Get Your Security Report</h3>
+                        <h3>📧 Get Your Security Report</h3>
                         <p>Enter your details to receive a comprehensive PDF report of your security scan results.</p>
-                        <div id="quickscan-zoho-form-container">
-                            <iframe
-                                aria-label='Request Security Report'
-                                frameborder="0"
-                                style="height:500px;width:100%;border:none;"
-                                src='https://forms.guardian360.eu/guardian360bv/form/RequestaQuickscanaccount/formperma/OCmRQubppJrTZMWzGX_61hFmw8d8oVVwnktMCPgpUV4'>
-                            </iframe>
-                        </div>
+
+                        <form id="quickscan-email-form" style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Company <span style="color: red;">*</span></label>
+                                <input type="text" name="company" required style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <div style="flex: 1;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">First Name <span style="color: red;">*</span></label>
+                                    <input type="text" name="firstname" required style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Last Name <span style="color: red;">*</span></label>
+                                    <input type="text" name="surname" required style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email Address <span style="color: red;">*</span></label>
+                                <input type="email" name="email" required style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone <span style="color: #666;">(optional)</span></label>
+                                <input type="tel" name="phone" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+
+                            <input type="hidden" name="url" id="scan-url-input">
+
+                            <!-- Privacy and Legal Disclaimers -->
+                            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px; margin: 20px 0; font-size: 12px; color: #6c757d;">
+                                <strong>Important Legal Notice:</strong>
+                                <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                                    <li>Your information will be used solely to email you the security scan report</li>
+                                    <li>We comply with GDPR and privacy regulations</li>
+                                    <li>Your data will not be shared with third parties without consent</li>
+                                    <li>By submitting, you agree to Guardian360's <a href="https://guardian360.nl/privacy" target="_blank">Privacy Policy</a> and <a href="https://quickscan.guardian360.nl/terms" target="_blank">Terms of Service</a></li>
+                                </ul>
+                            </div>
+
+                            <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #856404;">
+                                <strong>⚠️ API Usage Notice:</strong> This service uses the Guardian360 Quickscan API. Unauthorized or abusive use may result in IP blocking and legal action.
+                            </div>
+
+                            <div style="text-align: right; border-top: 1px solid #ddd; padding-top: 15px;">
+                                <button type="button" class="quickscan-cancel-email" style="margin-right: 10px; padding: 8px 16px; background: #f6f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">Cancel</button>
+                                <button type="submit" style="padding: 8px 20px; background: #0073aa; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Send PDF Report</button>
+                            </div>
+                        </form>
+
+                        <div id="email-form-message" style="display: none; margin-top: 20px; padding: 15px; border-radius: 4px;"></div>
                     </div>
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // Add close functionality
-            const modal = document.getElementById('quickscan-email-modal');
-            const closeBtn = modal.querySelector('.quickscan-modal-close');
-            const overlay = modal.querySelector('.quickscan-modal-overlay');
-
-            closeBtn.addEventListener('click', closeEmailModal);
-            overlay.addEventListener('click', closeEmailModal);
+            // Add event handlers
+            setupEmailModalHandlers();
         }
     }
 
-    function openEmailModal() {
+    function setupEmailModalHandlers() {
+        const modal = document.getElementById('quickscan-email-modal');
+        const closeBtn = modal.querySelector('.quickscan-modal-close');
+        const overlay = modal.querySelector('.quickscan-modal-overlay');
+        const cancelBtn = modal.querySelector('.quickscan-cancel-email');
+        const form = document.getElementById('quickscan-email-form');
+
+        closeBtn.addEventListener('click', closeEmailModal);
+        overlay.addEventListener('click', closeEmailModal);
+        cancelBtn.addEventListener('click', closeEmailModal);
+
+        form.addEventListener('submit', handleEmailFormSubmit);
+    }
+
+    function handleEmailFormSubmit(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const messageDiv = document.getElementById('email-form-message');
+
+        // Disable form
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+
+        // Get form data
+        const formData = new FormData(form);
+        formData.append('action', 'quickscan_send_email_report');
+        formData.append('nonce', quickscan_ajax.nonce);
+
+        // Send to WordPress backend which will forward to Quickscan API
+        fetch(quickscan_ajax.ajax_url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = '#d4edda';
+                messageDiv.style.color = '#155724';
+                messageDiv.innerHTML = '✅ <strong>Success!</strong> The security report has been sent to your email address.';
+                form.style.display = 'none';
+
+                setTimeout(() => {
+                    closeEmailModal();
+                }, 3000);
+            } else {
+                throw new Error(data.data || 'Failed to send email');
+            }
+        })
+        .catch(error => {
+            messageDiv.style.display = 'block';
+            messageDiv.style.background = '#f8d7da';
+            messageDiv.style.color = '#721c24';
+            messageDiv.innerHTML = '❌ <strong>Error:</strong> ' + error.message;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send PDF Report';
+        });
+    }
+
+    function openEmailModal(scanUrl) {
         const modal = document.getElementById('quickscan-email-modal');
         if (modal) {
+            // Set the scan URL
+            const urlInput = document.getElementById('scan-url-input');
+            if (urlInput && scanUrl) {
+                urlInput.value = scanUrl;
+            }
+
+            // Reset form
+            const form = document.getElementById('quickscan-email-form');
+            if (form) {
+                form.reset();
+                form.style.display = 'block';
+                const messageDiv = document.getElementById('email-form-message');
+                if (messageDiv) {
+                    messageDiv.style.display = 'none';
+                }
+            }
+
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden';
         }
@@ -133,7 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (emailButton) {
             emailButton.addEventListener('click', function() {
-                openEmailModal();
+                const scanUrl = input.value.trim();
+                openEmailModal(scanUrl);
             });
         }
     }

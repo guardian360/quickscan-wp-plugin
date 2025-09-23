@@ -6,9 +6,21 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="wrap">
-    <h1><?php _e('Start New Scan', 'quickscan-connector'); ?></h1>
-    
-    <form id="quickscan-form" method="post">
+    <!-- Official Guardian360 Quickscan Branding Header -->
+    <div style="text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 2px solid #e5e5e5;">
+        <div style="margin-bottom: 15px;">
+            <img src="<?php echo QUICKSCAN_PLUGIN_URL; ?>assets/images/logo_guardian360_quickscan.png"
+                 alt="Guardian360 Quickscan"
+                 style="height: 60px; width: auto;" />
+        </div>
+        <div>
+            <h1 style="margin: 0 0 5px 0; font-size: 28px; color: #2E3285;"><?php _e('Start New Scan', 'quickscan-connector'); ?></h1>
+        </div>
+    </div>
+
+    <!-- Centered Content Container -->
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
+        <form id="quickscan-form" method="post">
         <?php wp_nonce_field('quickscan_nonce', 'quickscan_nonce'); ?>
         
         <table class="form-table">
@@ -65,13 +77,14 @@ if (!defined('ABSPATH')) {
         <div id="results-content"></div>
     </div>
     
-    <?php if (get_option('quickscan_show_signature', true)): ?>
-    <div class="quickscan-signature">
-        <a href="https://guardian360.eu" target="_blank" rel="noopener noreferrer">
-            ⚡ Powered by Guardian360
-        </a>
-    </div>
-    <?php endif; ?>
+        <?php if (get_option('quickscan_show_signature', true)): ?>
+        <div class="quickscan-signature">
+            <a href="https://guardian360.eu" target="_blank" rel="noopener noreferrer">
+                ⚡ Powered by Guardian360
+            </a>
+        </div>
+        <?php endif; ?>
+    </div> <!-- End Centered Content Container -->
 </div>
 
 <script>

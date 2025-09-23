@@ -1,4 +1,69 @@
-/* Quickscan Connector Admin Styles */
+/* Quickscan Connector Admin Styles - Official Guardian360 Branding */
+
+/* Guardian360 Brand Colors */
+:root {
+    --guardian-primary: #2E3285;
+    --guardian-light: #9089c1;
+    --guardian-accent: #8D8BC0;
+    --guardian-success: #76E498;
+    --guardian-orange: #E67E22;
+}
+
+/* Admin Menu Icon Styling */
+#adminmenu .toplevel_page_quickscan .wp-menu-image svg {
+    fill: currentColor;
+    opacity: 0.9;
+}
+
+#adminmenu .toplevel_page_quickscan.current .wp-menu-image svg,
+#adminmenu .toplevel_page_quickscan:hover .wp-menu-image svg {
+    opacity: 1;
+}
+
+/* Branding Header Styles */
+.quickscan-branding-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 20px 0;
+    border-bottom: 2px solid #e5e5e5;
+}
+
+.quickscan-branding-logo {
+    margin-right: 20px;
+}
+
+.quickscan-branding-text h1 {
+    margin: 0;
+    font-size: 28px;
+    color: #23282d;
+}
+
+.quickscan-branding-text p {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Footer Signature */
+.quickscan-footer-signature {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e5e5;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+}
+
+.quickscan-footer-signature a {
+    color: var(--guardian-primary);
+    text-decoration: none;
+}
+
+.quickscan-footer-signature a:hover {
+    color: var(--guardian-light);
+    text-decoration: underline;
+}
 
 .quickscan-stats {
     display: flex;
@@ -27,7 +92,7 @@
     font-size: 2em;
     margin: 0;
     font-weight: bold;
-    color: #0073aa;
+    color: var(--guardian-primary);
 }
 
 .status-badge {

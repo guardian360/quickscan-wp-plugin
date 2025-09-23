@@ -1,15 +1,30 @@
 <?php
 /**
  * Plugin Name: Quickscan Connector
- * Plugin URI: https://github.com/guardian360/quickscan
+ * Plugin URI: https://github.com/guardian360/quickscan-wp-plugin
  * Description: WordPress plugin to connect and interact with the Quickscan API for security scanning
  * Version: 1.0.0
  * Author: Guardian360
- * Author URI: https://guardian360.nl
+ * Author URI: https://guardian360.eu/quickscan
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: quickscan-connector
  * Domain Path: /languages
+ *
+ * IMPORTANT LEGAL NOTICE:
+ * This plugin is licensed under GPLv2 as required by WordPress.org guidelines.
+ * However, the Quickscan API service remains proprietary and requires proper authorization.
+ * Unauthorized use of the Quickscan API service is prohibited and may result in:
+ * - Termination of API access
+ * - Legal action for breach of terms of service
+ * - Liability for damages
+ *
+ * The GPL license applies ONLY to this WordPress plugin code, NOT to:
+ * - The Quickscan API service
+ * - Guardian360 trademarks and branding
+ * - Proprietary security scanning algorithms
+ *
+ * For API access and terms of service, visit: https://quickscan.guardian360.nl
  */
 
 // Prevent direct access
@@ -100,6 +115,8 @@ class QuickscanConnector {
         add_action('wp_ajax_nopriv_quickscan_start_scan', [$this, 'ajax_start_scan']);
         add_action('wp_ajax_quickscan_send_pdf', [$this, 'ajax_send_pdf']);
         add_action('wp_ajax_nopriv_quickscan_send_pdf', [$this, 'ajax_send_pdf']);
+        add_action('wp_ajax_quickscan_send_email_report', [$this, 'ajax_send_email_report']);
+        add_action('wp_ajax_nopriv_quickscan_send_email_report', [$this, 'ajax_send_email_report']);
         add_action('wp_ajax_quickscan_test_connection', [$this, 'ajax_test_connection']);
         add_action('wp_ajax_quickscan_save_credentials', [$this, 'ajax_save_credentials']);
         add_action('wp_ajax_quickscan_test_credentials', [$this, 'ajax_test_credentials']);
@@ -178,6 +195,22 @@ class QuickscanConnector {
      * Add admin menu items
      */
     public function add_admin_menu() {
+        // Official Guardian360 shield icon with brand colors
+        $icon_svg = 'data:image/svg+xml;base64,' . base64_encode(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' .
+            '<defs>' .
+                '<linearGradient id="guardian-gradient" x1="0%" y1="0%" x2="100%" y2="100%">' .
+                    '<stop offset="0%" stop-color="#2E3285"/>' .
+                    '<stop offset="100%" stop-color="#9089c1"/>' .
+                '</linearGradient>' .
+            '</defs>' .
+            '<path d="M12 2L4 6v5c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z" fill="currentColor"/>' .
+            '<path d="M12 6L9 8v3c0 2.76 1.92 5.37 3 6 1.08-0.63 3-3.24 3-6V8l-3-2z" fill="white" opacity="0.9"/>' .
+            '<circle cx="12" cy="9.5" r="1.5" fill="white"/>' .
+            '<path d="M12 14c-0.5 0-1-0.2-1-0.5s0.5-0.5 1-0.5 1 0.2 1 0.5-0.5 0.5-1 0.5z" fill="#E67E22"/>' .
+            '</svg>'
+        );
+
         // Main menu
         add_menu_page(
             __('Quickscan', 'quickscan-connector'),
@@ -185,7 +218,7 @@ class QuickscanConnector {
             'manage_options',
             'quickscan',
             [$this, 'render_dashboard_page'],
-            'dashicons-shield',
+            $icon_svg,
             30
         );
         
@@ -444,8 +477,107 @@ class QuickscanConnector {
             wp_send_json_error('Quickscan service error. Please try again later.');
         }
     }
-    
-    
+
+    /**
+     * AJAX handler for sending email reports directly to Quickscan API
+     * Includes proper validation and legal compliance notices
+     */
+    public function ajax_send_email_report() {
+        // Verify nonce for security
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
+            wp_send_json_error('Security verification failed');
+            return;
+        }
+
+        // Rate limiting check (simple implementation)
+        $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $rate_limit_key = 'quickscan_email_rate_' . md5($client_ip);
+        $rate_limit_count = get_transient($rate_limit_key);
+
+        if ($rate_limit_count && $rate_limit_count >= 5) {
+            wp_send_json_error('Rate limit exceeded. Please wait before sending another email.');
+            return;
+        }
+
+        // Collect and sanitize form data
+        $email_data = [
+            'url' => sanitize_url($_POST['url'] ?? ''),
+            'company' => sanitize_text_field($_POST['company'] ?? ''),
+            'firstname' => sanitize_text_field($_POST['firstname'] ?? ''),
+            'surname' => sanitize_text_field($_POST['surname'] ?? ''),
+            'email' => sanitize_email($_POST['email'] ?? ''),
+            'phone' => sanitize_text_field($_POST['phone'] ?? ''),
+        ];
+
+        // Validate required fields
+        $required_fields = ['url', 'company', 'firstname', 'surname', 'email'];
+        foreach ($required_fields as $field) {
+            if (empty($email_data[$field])) {
+                wp_send_json_error("Required field '$field' is missing");
+                return;
+            }
+        }
+
+        // Validate email format
+        if (!is_email($email_data['email'])) {
+            wp_send_json_error('Please enter a valid email address');
+            return;
+        }
+
+        // Validate URL format
+        if (!filter_var($email_data['url'], FILTER_VALIDATE_URL)) {
+            wp_send_json_error('Please enter a valid URL');
+            return;
+        }
+
+        // Log the email request for compliance tracking
+        $this->log_message('Email report requested', [
+            'url' => $email_data['url'],
+            'email' => $email_data['email'],
+            'company' => $email_data['company'],
+            'ip' => $client_ip,
+            'timestamp' => current_time('mysql')
+        ]);
+
+        // Forward request to Quickscan API
+        $response = wp_remote_post('https://quickscan.guardian360.nl/scan/results', [
+            'body' => array_merge($email_data, [
+                'source' => 'wordpress_plugin',
+                'plugin_version' => QUICKSCAN_VERSION,
+                'site_url' => home_url()
+            ]),
+            'timeout' => 30,
+            'headers' => [
+                'Accept' => 'application/json',
+                'User-Agent' => 'Quickscan-WordPress-Plugin/' . QUICKSCAN_VERSION,
+            ]
+        ]);
+
+        // Update rate limiting counter
+        set_transient($rate_limit_key, ($rate_limit_count ? $rate_limit_count + 1 : 1), HOUR_IN_SECONDS);
+
+        if (is_wp_error($response)) {
+            $this->log_error('Email API error: ' . $response->get_error_message());
+            wp_send_json_error('Unable to connect to email service. Please try again later.');
+            return;
+        }
+
+        $http_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+
+        if ($http_code >= 200 && $http_code < 300) {
+            $this->log_message('Email report sent successfully', [
+                'url' => $email_data['url'],
+                'email' => $email_data['email']
+            ]);
+            wp_send_json_success('Your security report has been sent! Please check your email inbox (and spam folder).');
+        } else {
+            $this->log_error('Email API HTTP error: ' . $http_code . ' - ' . $response_body);
+            wp_send_json_error('Service temporarily unavailable. Please try again in a few minutes.');
+        }
+    }
+
+
     /**
      * Encrypt password for storage
      */

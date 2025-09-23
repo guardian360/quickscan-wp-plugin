@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+    <defs>
+        <linearGradient id="guardian-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#2E3285"/>
+            <stop offset="100%" stop-color="#9089c1"/>
+        </linearGradient>
+    </defs>
+    <!-- Shield background -->
+    <path d="M12 2L4 6v5c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z"
+          fill="url(#guardian-gradient)" stroke="#2E3285" stroke-width="0.5"/>
+
+    <!-- Central lighthouse/tower element -->
+    <path d="M12 6L9 8v3c0 2.76 1.92 5.37 3 6 1.08-0.63 3-3.24 3-6V8l-3-2z"
+          fill="white" opacity="0.9"/>
+
+    <!-- Lighthouse beam/light -->
+    <circle cx="12" cy="9.5" r="1.5" fill="white"/>
+    <path d="M12 8v3M10.5 9.5h3M11 11l2 2M13 11l-2 2"
+          stroke="#2E3285" stroke-width="0.5" fill="none"/>
+
+    <!-- Guardian360 accent -->
+    <path d="M12 14c-0.5 0-1-0.2-1-0.5s0.5-0.5 1-0.5 1 0.2 1 0.5-0.5 0.5-1 0.5z"
+          fill="#E67E22"/>
+</svg>

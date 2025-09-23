@@ -1,6 +1,6 @@
 === Quickscan Connector ===
 Contributors: guardian360
-Donate link: https://guardian360.nl
+Donate link: https://guardian360.eu/quickscan
 Tags: security, scanner, vulnerability, quickscan, website security
 Requires at least: 5.0
 Tested up to: 6.4

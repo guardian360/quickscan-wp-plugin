@@ -1,3 +1,14 @@
+/* Official Guardian360 Quickscan Frontend Styles */
+
+/* Guardian360 Brand Colors */
+:root {
+    --guardian-primary: #2E3285;
+    --guardian-light: #9089c1;
+    --guardian-accent: #8D8BC0;
+    --guardian-success: #76E498;
+    --guardian-orange: #E67E22;
+}
+
 /* Guardian360-style Quickscan Results */
 .quickscan-results-table {
     width: 100%;
@@ -22,7 +33,7 @@
 
 /* Background colors for different sections */
 .bg-guardian {
-    background-color: #337ab7;
+    background-color: var(--guardian-primary);
     color: white;
 }
 
