@@ -1,0 +1,126 @@
+name: Pull Request Automation
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  create-pr:
+    name: Auto-create Pull Request
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && !startsWith(github.ref_name, 'dependabot/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check if PR exists
+      id: check-pr
+      run: |
+        PR_COUNT=$(gh pr list --head ${{ github.ref_name }} --json number --jq 'length')
+        echo "pr_count=$PR_COUNT" >> $GITHUB_OUTPUT
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get branch status
+      id: branch-status
+      if: steps.check-pr.outputs.pr_count == '0'
+      run: |
+        # Check if branch is ahead of staging (or main if no staging)
+        if git show-ref --verify --quiet refs/remotes/origin/staging; then
+          AHEAD=$(git rev-list --count origin/staging..${{ github.ref_name }})
+          BEHIND=$(git rev-list --count ${{ github.ref_name }}..origin/staging)
+          BASE_BRANCH="staging"
+        else
+          AHEAD=$(git rev-list --count origin/main..${{ github.ref_name }})
+          BEHIND=$(git rev-list --count ${{ github.ref_name }}..origin/main)
+          BASE_BRANCH="main"
+        fi
+
+        echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
+        echo "behind=$BEHIND" >> $GITHUB_OUTPUT
+
+        echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+
+        # Get commit messages for PR description
+        COMMITS=$(git log --oneline $BASE_BRANCH..${{ github.ref_name }} | head -10)
+        echo "commits<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMITS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Pull Request
+      if: steps.check-pr.outputs.pr_count == '0' && steps.branch-status.outputs.ahead > '0'
+      run: |
+        # Determine target branch based on branch name pattern
+        if [[ "${{ github.ref_name }}" == feature/* ]] || [[ "${{ github.ref_name }}" == feat/* ]]; then
+          TARGET_BRANCH="staging"
+        elif [[ "${{ github.ref_name }}" == hotfix/* ]] || [[ "${{ github.ref_name }}" == release/* ]]; then
+          TARGET_BRANCH="main"
+        else
+          TARGET_BRANCH="staging"
+        fi
+
+        # Create PR title from branch name
+        BRANCH_NAME="${{ github.ref_name }}"
+        PR_TITLE=$(echo "$BRANCH_NAME" | sed 's/[-_]/ /g' | sed 's/\b\w/\u&/g')
+
+        # Create PR description
+        PR_BODY="## Summary
+        Auto-generated pull request for branch \`${{ github.ref_name }}\`.
+
+        ## Changes
+        ${{ steps.branch-status.outputs.commits }}
+
+        ## Branch Status
+        - **Commits ahead of $TARGET_BRANCH**: ${{ steps.branch-status.outputs.ahead }}
+        - **Commits behind $TARGET_BRANCH**: ${{ steps.branch-status.outputs.behind }}
+
+        ## Checklist
+        - [ ] Code follows WordPress coding standards
+        - [ ] All tests pass
+        - [ ] No merge conflicts with target branch
+        - [ ] Documentation updated if needed
+
+        ---
+        🤖 This PR was created automatically when you pushed to \`${{ github.ref_name }}\`."
+
+        gh pr create \
+          --title "$PR_TITLE" \
+          --body "$PR_BODY" \
+          --base "$TARGET_BRANCH" \
+          --head "${{ github.ref_name }}" \
+          --label "auto-created"
+
+        echo "✅ Pull request created successfully!"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check for merge conflicts
+      if: steps.branch-status.outputs.behind > '0'
+      run: |
+        echo "⚠️ Your branch is ${{ steps.branch-status.outputs.behind }} commits behind main."
+        echo "Please rebase your branch to avoid merge conflicts:"
+        echo "  git fetch origin"
+        echo "  git rebase origin/main"
+        echo "  git push --force-with-lease origin ${{ github.ref_name }}"
+
+    - name: Add PR comment about conflicts
+      if: steps.branch-status.outputs.behind > '0' && steps.check-pr.outputs.pr_count == '1'
+      run: |
+        PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number --jq '.[0].number')
+        gh pr comment $PR_NUMBER --body "⚠️ **Merge conflicts detected**
+
+        This branch is ${{ steps.branch-status.outputs.behind }} commits behind the target branch. Please rebase to resolve potential conflicts:
+
+        \`\`\`bash
+        git fetch origin
+        git rebase origin/main
+        git push --force-with-lease origin ${{ github.ref_name }}
+        \`\`\`"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,115 @@
+name: Conventional Commits Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+
+jobs:
+  validate-conventional-commits:
+    name: Validate Conventional Commits
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Validate commit messages
+      run: |
+        # Check if this is a PR or direct push
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          HEAD_SHA=${{ github.event.pull_request.head.sha }}
+        else
+          # For direct pushes, check the last few commits
+          BASE_SHA=$(git rev-parse HEAD~3)
+          HEAD_SHA=$(git rev-parse HEAD)
+        fi
+
+        # Get commit messages
+        COMMITS=$(git log --pretty=format:"%h %s" $BASE_SHA..$HEAD_SHA)
+
+        echo "Validating commit messages:"
+        echo "$COMMITS"
+        echo ""
+
+        # Conventional commit pattern
+        PATTERN="^[a-f0-9]{7,} (feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+"
+
+        FAILED=false
+        while IFS= read -r commit; do
+          if [[ -n "$commit" ]]; then
+            if [[ ! "$commit" =~ $PATTERN ]]; then
+              echo "❌ Invalid commit message: $commit"
+              echo "   Expected format: type(scope): description"
+              echo "   Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+              FAILED=true
+            else
+              echo "✅ Valid commit: $commit"
+            fi
+          fi
+        done <<< "$COMMITS"
+
+        if [ "$FAILED" = true ]; then
+          echo ""
+          echo "🚫 Some commit messages don't follow conventional commit format."
+          echo "📖 Learn more: https://www.conventionalcommits.org/"
+          exit 1
+        else
+          echo ""
+          echo "🎉 All commit messages follow conventional commit format!"
+        fi
+
+  auto-label-pr:
+    name: Auto-label PR based on conventional commits
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: validate-conventional-commits
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Analyze commits and add labels
+      run: |
+        BASE_SHA=${{ github.event.pull_request.base.sha }}
+        HEAD_SHA=${{ github.event.pull_request.head.sha }}
+
+        # Get commit types
+        COMMIT_TYPES=$(git log --pretty=format:"%s" $BASE_SHA..$HEAD_SHA | grep -oP "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)" | sort | uniq)
+
+        echo "Found commit types: $COMMIT_TYPES"
+
+        # Add labels based on commit types
+        while IFS= read -r type; do
+          case $type in
+            feat)
+              gh pr edit ${{ github.event.pull_request.number }} --add-label "enhancement"
+              ;;
+            fix)
+              gh pr edit ${{ github.event.pull_request.number }} --add-label "bug"
+              ;;
+            docs)
+              gh pr edit ${{ github.event.pull_request.number }} --add-label "documentation"
+              ;;
+            refactor)
+              gh pr edit ${{ github.event.pull_request.number }} --add-label "refactor"
+              ;;
+            test)
+              gh pr edit ${{ github.event.pull_request.number }} --add-label "tests"
+              ;;
+            chore|ci|build)
+              gh pr edit ${{ github.event.pull_request.number }} --add-label "maintenance"
+              ;;
+          esac
+        done <<< "$COMMIT_TYPES"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
