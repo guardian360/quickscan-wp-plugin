@@ -12,7 +12,52 @@ $has_credentials = !empty($stored_email);
 
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-    
+
+    <!-- Free vs Pro Feature Comparison -->
+    <div class="card" style="margin: 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div style="padding: 30px;">
+            <h2 style="color: white; margin-top: 0;"><?php _e('Quickscan: Free vs Pro', 'quickscan-connector'); ?></h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                <div>
+                    <h3 style="color: #e8f4fd;">🆓 <?php _e('Free Version', 'quickscan-connector'); ?></h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> Basic security scanning</li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> Gutenberg blocks & widgets</li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> Shortcode support</li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> Scan completion notification</li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> Email report requests via form</li>
+                        <li style="padding: 5px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">Detailed scan results</span></li>
+                        <li style="padding: 5px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">Direct PDF email reports</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #e8f4fd;">⭐ <?php _e('Pro Version', 'quickscan-connector'); ?></h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> Everything in Free</li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> <strong>Detailed vulnerability reports</strong></li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> <strong>Security headers analysis</strong></li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> <strong>CMS detection & analysis</strong></li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> <strong>Direct PDF email integration</strong></li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> <strong>Historical scan data</strong></li>
+                        <li style="padding: 5px 0;"><span style="color: #4CAF50;">✓</span> <strong>Priority support</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <?php if (!$has_credentials): ?>
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="margin-bottom: 15px; font-size: 16px;"><?php _e('Currently using: Free Version', 'quickscan-connector'); ?></p>
+                <a href="<?php echo admin_url('admin.php?page=quickscan-account-request'); ?>" class="button button-primary button-hero">
+                    <?php _e('Upgrade to Pro →', 'quickscan-connector'); ?>
+                </a>
+            </div>
+            <?php else: ?>
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="margin-bottom: 15px; font-size: 16px;"><strong><?php _e('🎉 Pro Version Active', 'quickscan-connector'); ?></strong></p>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
     <!-- Credential Management Section -->
     <div class="card" style="margin: 20px 0;">
         <h2><?php _e('Quickscan Account Credentials', 'quickscan-connector'); ?></h2>

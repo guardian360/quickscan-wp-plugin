@@ -9,26 +9,43 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Professional website security scanning with vetted access through Guardian360's Quickscan platform.
+Free website security scanning with optional Pro features. Works immediately - no registration required!
 
 == Description ==
 
-The Quickscan Connector plugin integrates your WordPress site with Guardian360's professional Quickscan security platform, providing enterprise-grade vulnerability scanning and security analysis.
+The Quickscan Connector plugin provides professional website security scanning through Guardian360's Quickscan platform. **Start scanning immediately** with our free version - no account required!
 
-= Key Features =
+= ✨ Free Version Features =
 
-* **Professional Security Scanning** - Comprehensive vulnerability detection via Quickscan API
-* **Vetted Access System** - Quality-assured user onboarding through manual review process
-* **Multiple Integration Methods** - Gutenberg blocks, widgets, and shortcodes
-* **Secure Credential Storage** - Encrypted storage using WordPress security keys
-* **No Data Collection** - No email or scan data stored in WordPress
+* **Instant Security Scanning** - Works immediately, no registration needed
+* **Professional Scan Engine** - Powered by Guardian360's enterprise platform
+* **Multiple Integration Options** - Gutenberg blocks, widgets, and shortcodes
+* **Email Report Requests** - Request detailed reports via embedded form
+* **WordPress.org Compliant** - Fully functional without external accounts
+
+= ⭐ Pro Version Features =
+
+* **Everything in Free** - Plus advanced professional features
+* **Detailed Vulnerability Reports** - In-depth security analysis with actionable insights
+* **Security Headers Analysis** - Comprehensive header security evaluation
+* **CMS Detection** - Identify and analyze content management systems
+* **Direct PDF Email Reports** - Instant delivery of comprehensive security reports
+* **Historical Data** - Track security improvements over time
+* **Priority Support** - Direct access to security experts
 
 = How It Works =
 
-1. Request a Quickscan account through the embedded form (manual review within 24 hours)
-2. Receive your credentials via email after approval
-3. Configure the plugin with your Quickscan credentials
-4. Start scanning websites for security vulnerabilities
+**Free Version:**
+1. Install and activate the plugin
+2. Add a security scanner block/widget to any page
+3. Visitors can scan websites immediately
+4. Request detailed reports via the email form
+
+**Pro Version:**
+1. Request a Pro account through the plugin (24-hour approval)
+2. Configure your Pro credentials in settings
+3. Access detailed scan results and direct email reports
+4. Enjoy priority support and advanced features
 
 = Privacy & External Services =
 

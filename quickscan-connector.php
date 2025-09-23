@@ -121,22 +121,27 @@ class QuickscanConnector {
      * Load settings from WordPress options
      */
     private function load_settings() {
-        // Always use the Guardian360 API v1 endpoint
-        $this->api_base_url = 'https://quickscan.guardian360.nl/api/v1';
-        
-        // User-specific credentials (per WordPress user)
+        // Determine API version based on user credentials
         $current_user_id = get_current_user_id();
         if ($current_user_id) {
             $this->user_email = get_user_meta($current_user_id, 'quickscan_email', true);
             $this->user_password = get_user_meta($current_user_id, 'quickscan_password', true);
-            
+
             // Decrypt password if stored
             if ($this->user_password) {
                 $this->user_password = $this->decrypt_password($this->user_password);
             }
-            
+
             // User-specific token storage
             $this->api_token = get_transient('quickscan_api_token_' . $current_user_id);
+        }
+
+        // Use v1 API for authenticated Pro users, v2 for free users
+        if (!empty($this->user_email) && !empty($this->user_password)) {
+            $this->api_base_url = 'https://quickscan.guardian360.nl/api/v1';
+        } else {
+            // Free version uses v2 API (no authentication required)
+            $this->api_base_url = 'https://quickscan.guardian360.nl/api/v2';
         }
     }
     
@@ -151,6 +156,7 @@ class QuickscanConnector {
         add_option('quickscan_enable_logging', true);
         add_option('quickscan_show_signature', true);
         add_option('quickscan_signature_text', __('Powered by Guardian360', 'quickscan-connector'));
+        add_option('quickscan_api_version', 'v2'); // Default to free version
         
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -350,11 +356,22 @@ class QuickscanConnector {
             return;
         }
         
-        // Call Quickscan API v1 with English language preference
-        $result = $this->call_api('POST', 'scan', [
-            'url' => $url,
-            'language' => 'en'
-        ]);
+        // Determine if using v2 (free) or v1 (pro) API
+        $is_v2 = strpos($this->api_base_url, '/v2') !== false;
+
+        // Call Quickscan API with appropriate parameters
+        if ($is_v2) {
+            // v2 API only needs URL
+            $result = $this->call_api('POST', 'scan', [
+                'url' => $url
+            ]);
+        } else {
+            // v1 API supports language parameter
+            $result = $this->call_api('POST', 'scan', [
+                'url' => $url,
+                'language' => 'en'
+            ]);
+        }
         
         if (is_wp_error($result)) {
             wp_send_json_error('API Error: ' . $result->get_error_message());
@@ -515,9 +532,15 @@ class QuickscanConnector {
     }
     
     /**
-     * Ensure we have a valid API token
+     * Ensure we have a valid API token (only for v1 API)
      */
     private function ensure_authenticated() {
+        // v2 API doesn't require authentication
+        if (strpos($this->api_base_url, '/v2') !== false) {
+            return true;
+        }
+
+        // v1 API requires authentication
         if (empty($this->api_token)) {
             return $this->authenticate();
         }
@@ -525,24 +548,31 @@ class QuickscanConnector {
     }
     
     /**
-     * Call Quickscan API v1
+     * Call Quickscan API (v1 or v2)
      */
     private function call_api($method, $endpoint, $data = null) {
-        // Ensure we're authenticated
-        if (!$this->ensure_authenticated()) {
+        // Check if using v2 (free) or v1 (pro) API
+        $is_v2 = strpos($this->api_base_url, '/v2') !== false;
+
+        // Only authenticate for v1 API
+        if (!$is_v2 && !$this->ensure_authenticated()) {
             return new WP_Error('auth_failed', 'Failed to authenticate with Quickscan API');
         }
-        
+
         $url = trailingslashit($this->api_base_url) . ltrim($endpoint, '/');
-        
+
         $args = [
             'method' => $method,
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->api_token,
                 'Accept' => 'application/json'
             ],
             'timeout' => 120
         ];
+
+        // Add authorization header only for v1 API
+        if (!$is_v2 && $this->api_token) {
+            $args['headers']['Authorization'] = 'Bearer ' . $this->api_token;
+        }
         
         // Handle data based on method
         if ($data && !empty($data)) {
@@ -825,11 +855,22 @@ class QuickscanConnector {
             true
         );
         
-        wp_localize_script('quickscan-frontend', 'quickscan_frontend', [
+        // Determine if current user has Pro credentials
+        $current_user_id = get_current_user_id();
+        $has_pro_credentials = false;
+        if ($current_user_id) {
+            $user_email = get_user_meta($current_user_id, 'quickscan_email', true);
+            $user_password = get_user_meta($current_user_id, 'quickscan_password', true);
+            $has_pro_credentials = !empty($user_email) && !empty($user_password);
+        }
+
+        wp_localize_script('quickscan-frontend', 'quickscan_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('quickscan_nonce'),
             'show_signature' => get_option('quickscan_show_signature', true),
             'signature_text' => __('Powered by Guardian360', 'quickscan-connector'),
+            'is_pro' => $has_pro_credentials ? 'true' : 'false',
+            'admin_url' => admin_url(),
             'strings' => [
                 'enter_valid_url' => __('Please enter a valid URL', 'quickscan-connector'),
                 'scanning' => __('Scanning...', 'quickscan-connector'),

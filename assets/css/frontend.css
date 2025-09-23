@@ -345,3 +345,108 @@
 .quickscan-gdpr-notice a:hover {
     text-decoration: none;
 }
+
+/* Email Modal Styles */
+.quickscan-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+}
+
+.quickscan-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+}
+
+.quickscan-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.quickscan-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #999;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+}
+
+.quickscan-modal-close:hover {
+    color: #333;
+}
+
+.quickscan-modal-content h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* Email Button */
+.quickscan-email-button {
+    background: #337ab7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.quickscan-email-button:hover {
+    background: #2a6395;
+}
+
+/* Free Notice */
+.quickscan-free-notice {
+    padding: 10px;
+    background: #f8f9fa;
+    border-left: 3px solid #337ab7;
+    margin-top: 15px;
+}
+
+.quickscan-free-notice a {
+    color: #337ab7;
+    text-decoration: underline;
+}
+
+/* Free vs Pro Results Styling */
+.quickscan-summary {
+    padding: 20px;
+    background: #f9f9f9;
+    border-left: 4px solid #337ab7;
+    border-radius: 4px;
+}
+
+.quickscan-summary .success {
+    color: #5cb85c;
+    font-weight: bold;
+}
+
+.quickscan-summary .error {
+    color: #d9534f;
+    font-weight: bold;
+}
