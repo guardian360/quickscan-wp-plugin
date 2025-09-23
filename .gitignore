@@ -1,0 +1,58 @@
+# Dependencies - never include in plugin distribution
+node_modules/
+vendor/
+
+# Build artifacts and development files
+coverage/
+.nyc_output/
+*.log
+*.lock
+
+# Development and testing
+tests/
+bin/
+.github/
+phpcs.xml
+phpstan.neon
+psalm.xml
+phpmd.xml
+package.json
+package-lock.json
+webpack.config.js
+.babelrc
+.eslintrc*
+.prettier*
+.stylelintrc*
+
+# Build tools and configs - only built assets should be included
+composer.json
+composer.lock
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Source maps (development only)
+*.map
+
+# Plugin build artifacts that shouldn't be versioned
+assets/dist/
+
+# WordPress debug and cache files
+debug.log
+wp-config-local.php

@@ -1,0 +1,60 @@
+# Development dependencies and tools
+node_modules/
+vendor/
+tests/
+bin/
+.github/
+
+# Build configuration files
+package.json
+package-lock.json
+composer.json
+composer.lock
+webpack.config.js
+
+# Code quality and linting configs
+phpcs.xml
+phpstan.neon
+psalm.xml
+phpmd.xml
+.eslintrc*
+.prettier*
+.stylelintrc*
+.babelrc*
+
+# Source files (only built assets should be included)
+assets/js/
+assets/scss/
+
+# Documentation and development files
+*.md
+README*
+CHANGELOG*
+CONTRIBUTING*
+LICENSE*
+
+# Testing and coverage
+coverage/
+.nyc_output/
+
+# Logs and temporary files
+*.log
+*.map
+.tmp/
+tmp/
+temp/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env*
+
+# Git files
+.git*

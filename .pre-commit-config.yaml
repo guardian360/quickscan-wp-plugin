@@ -1,0 +1,90 @@
+repos:
+  # PHP Code Standards and Linting
+  - repo: local
+    hooks:
+      - id: phpcs-fix
+        name: Fix PHP Coding Standards
+        entry: composer run phpcs:fix
+        language: system
+        files: \.php$
+        pass_filenames: false
+
+      - id: phpcs-check
+        name: Check PHP Coding Standards
+        entry: composer run phpcs
+        language: system
+        files: \.php$
+        pass_filenames: false
+
+  # PHP Static Analysis
+  - repo: local
+    hooks:
+      - id: phpstan
+        name: PHPStan Static Analysis
+        entry: composer run phpstan
+        language: system
+        files: \.php$
+        pass_filenames: false
+
+      - id: psalm
+        name: Psalm Security Analysis
+        entry: composer run psalm
+        language: system
+        files: \.php$
+        pass_filenames: false
+
+  # JavaScript/CSS Linting and Formatting
+  - repo: local
+    hooks:
+      - id: eslint-fix
+        name: Fix JavaScript with ESLint
+        entry: npm run lint:fix
+        language: system
+        files: \.(js)$
+        pass_filenames: false
+
+      - id: prettier-fix
+        name: Format with Prettier
+        entry: npm run format
+        language: system
+        files: \.(js|css|scss)$
+        pass_filenames: false
+
+  # Generic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.min\.(js|css)$
+      - id: end-of-file-fixer
+        exclude: \.min\.(js|css)$
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Security Checks
+  - repo: local
+    hooks:
+      - id: composer-audit
+        name: Composer Security Audit
+        entry: composer audit
+        language: system
+        files: composer\.(json|lock)$
+        pass_filenames: false
+
+  # Prevent commits to main branch
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+        stages: [commit]
+
+# Global settings
+default_stages: [commit]
+fail_fast: false

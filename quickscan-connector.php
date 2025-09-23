@@ -89,6 +89,7 @@ class QuickscanConnector {
     private function __construct() {
         $this->init_hooks();
         $this->load_settings();
+        $this->init_updater();
     }
     
     /**
@@ -189,8 +190,17 @@ class QuickscanConnector {
         // Flush rewrite rules
         flush_rewrite_rules();
     }
-    
-    
+
+    /**
+     * Initialize GitHub updater
+     */
+    private function init_updater() {
+        if (is_admin()) {
+            require_once plugin_dir_path(__FILE__) . 'includes/class-github-updater.php';
+            new Quickscan_GitHub_Updater(__FILE__);
+        }
+    }
+
     /**
      * Add admin menu items
      */
