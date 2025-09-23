@@ -90,6 +90,7 @@ class QuickscanConnector {
         $this->init_hooks();
         $this->load_settings();
         $this->init_updater();
+        $this->load_formatter();
     }
     
     /**
@@ -121,7 +122,9 @@ class QuickscanConnector {
         add_action('wp_ajax_quickscan_test_connection', [$this, 'ajax_test_connection']);
         add_action('wp_ajax_quickscan_save_credentials', [$this, 'ajax_save_credentials']);
         add_action('wp_ajax_quickscan_test_credentials', [$this, 'ajax_test_credentials']);
-        
+        add_action('wp_ajax_quickscan_format_results', [$this, 'ajax_format_results']);
+        add_action('wp_ajax_nopriv_quickscan_format_results', [$this, 'ajax_format_results']);
+
         // Gutenberg blocks
         add_action('init', [$this, 'register_blocks']);
         
@@ -199,6 +202,13 @@ class QuickscanConnector {
             require_once plugin_dir_path(__FILE__) . 'includes/class-github-updater.php';
             new Quickscan_GitHub_Updater(__FILE__);
         }
+    }
+
+    /**
+     * Load the results formatter
+     */
+    private function load_formatter() {
+        require_once plugin_dir_path(__FILE__) . 'includes/class-results-formatter.php';
     }
 
     /**
@@ -946,6 +956,27 @@ class QuickscanConnector {
         } else {
             wp_send_json_error('Invalid credentials. Please check your email and password.');
         }
+    }
+
+    /**
+     * AJAX handler to format scan results
+     */
+    public function ajax_format_results() {
+        check_ajax_referer('quickscan_nonce', 'nonce');
+
+        $results = isset($_POST['results']) ? json_decode(stripslashes($_POST['results']), true) : null;
+
+        if (!$results) {
+            wp_send_json_error('No results provided');
+        }
+
+        // Include CSS styles
+        $html = Quickscan_Results_Formatter::get_styles();
+
+        // Format the results
+        $html .= Quickscan_Results_Formatter::format_results($results, !is_admin());
+
+        wp_send_json_success($html);
     }
     
     /**

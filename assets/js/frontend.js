@@ -334,93 +334,49 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayResults(resultsContainer, data) {
         const content = resultsContainer.querySelector('.results-content');
 
-        // Check if using v2 API (free version) or v1 API (pro version)
-        const isV2 = !data.data; // v2 API returns results directly, v1 wraps in data
-        const scanData = isV2 ? data : data.data;
+        // Use server-side formatting for consistency
+        const formData = new FormData();
+        formData.append('action', 'quickscan_format_results');
+        formData.append('results', JSON.stringify(data));
+        formData.append('nonce', quickscan_ajax.nonce);
 
-        let html = '';
-
-        // Display summary based on API version
-        if (isV2) {
-            // V2 API simple response
-            html += '<div class="quickscan-summary">';
-            html += '<h5>Scan Complete</h5>';
-            if (scanData.statusCode === 200) {
-                html += '<p class="success">✅ Scan completed successfully</p>';
-                html += '<p>Security analysis has been performed on the requested URL.</p>';
-                html += '<p><strong>Want detailed results?</strong> Click the "Email Report" button below to receive a comprehensive PDF report.</p>';
+        fetch(quickscan_ajax.ajax_url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(response => {
+            if (response.success) {
+                content.innerHTML = response.data;
             } else {
-                html += '<p class="error">⚠️ Scan encountered issues</p>';
-                if (scanData.error) {
-                    html += '<p>' + escapeHtml(scanData.error) + '</p>';
-                }
+                // Fallback to simple display if formatting fails
+                displayResultsFallback(content, data);
             }
-            html += '</div>';
+        })
+        .catch(error => {
+            // Fallback to simple display on error
+            displayResultsFallback(content, data);
+        });
+    }
+
+    function displayResultsFallback(content, data) {
+        // Simple fallback display for when server formatting fails
+        const scanData = data.data || data;
+        let html = '<div class="quickscan-results-simple">';
+
+        if (scanData && scanData.Info) {
+            html += '<h5>Scan Results</h5>';
+            html += '<p><strong>URL:</strong> ' + escapeHtml(scanData.Info.URL || '') + '</p>';
+            if (scanData.Info.Score !== undefined) {
+                html += '<p><strong>Security Score:</strong> ' + scanData.Info.Score + '/100</p>';
+            }
+            html += '<p class="success">✅ Scan completed successfully</p>';
+            html += '<p>Click "Email Report" to receive detailed results.</p>';
         } else {
-            // V1 API detailed response (Pro users)
-            html += '<div class="quickscan-detailed-results">';
-            html += '<table class="table table-bordered">';
-            html += '<thead><tr><th>Security Check</th><th>Status</th></tr></thead>';
-            html += '<tbody>';
-
-            // Basic Information Section
-            if (scanData && scanData.Info) {
-                html += '<tr><th colspan="2" class="bg-light"><strong>Basic Information</strong></th></tr>';
-
-                // Domain
-                if (scanData.Info.domain) {
-                    html += '<tr><td>Domain</td><td>' + escapeHtml(scanData.Info.domain) + '</td></tr>';
-                }
-
-                // Status Code
-                if (scanData.Info.status) {
-                    const statusClass = scanData.Info.status >= 200 && scanData.Info.status < 300 ? 'success' : 'warning';
-                    html += '<tr><td>HTTP Status</td><td><span class="label label-' + statusClass + '">' + scanData.Info.status + '</span></td></tr>';
-                }
-
-                // SSL/TLS
-                if (scanData.Info.protocol) {
-                    html += '<tr><td>Protocol</td><td>' + escapeHtml(scanData.Info.protocol) + '</td></tr>';
-                }
-
-                // CMS Detection
-                if (scanData.Info.cms && scanData.Info.cms.name) {
-                    html += '<tr><td>CMS Detected</td><td>' + escapeHtml(scanData.Info.cms.name);
-                    if (scanData.Info.cms.version) {
-                        html += ' v' + escapeHtml(scanData.Info.cms.version);
-                    }
-                    html += '</td></tr>';
-                }
-            }
-
-            // Security Headers Section
-            if (scanData && scanData.security_headers) {
-                html += '<tr><th colspan="2" class="bg-light"><strong>Security Headers</strong></th></tr>';
-
-                const headers = {
-                    'Strict-Transport-Security': 'HSTS',
-                    'X-Content-Type-Options': 'X-Content-Type-Options',
-                    'X-Frame-Options': 'X-Frame-Options',
-                    'Content-Security-Policy': 'CSP',
-                    'X-XSS-Protection': 'X-XSS-Protection',
-                    'Referrer-Policy': 'Referrer-Policy'
-                };
-
-                for (const [header, displayName] of Object.entries(headers)) {
-                    const headerData = scanData.security_headers[header];
-                    const isConfigured = headerData && (Array.isArray(headerData) ? headerData.length > 0 : true);
-
-                    if (isConfigured) {
-                        html += '<tr><td>' + displayName + '</td><td><span class="label label-success">✓ Configured</span></td></tr>';
-                    } else {
-                        html += '<tr><td>' + displayName + '</td><td><span class="label label-danger">✗ Missing</span></td></tr>';
-                    }
-                }
-            }
-
-            html += '</tbody></table>';
-            html += '</div>';
+            html += '<p class="error">⚠️ Unable to display detailed results</p>';
         }
+
+        html += '</div>';
 
         content.innerHTML = html;
     }

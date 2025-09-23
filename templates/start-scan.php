@@ -144,49 +144,32 @@ jQuery(document).ready(function($) {
                 
                 if (jsonResponse && jsonResponse.success) {
                     $('#scan-progress').html('<p class="success"><?php _e('Scan completed successfully!', 'quickscan-connector'); ?></p>');
-                    
+
                     // Display results
                     $results.show();
                     if (jsonResponse.data) {
-                        // Format the results nicely
-                        var data = jsonResponse.data.data;
-                        var html = '<div class="scan-results-formatted">';
-                        
-                        if (data && data.Info) {
-                            html += '<div class="security-score"><h4>Security Score: <span class="score-value">' + data.Info.Score + '/100</span></h4></div>';
-                            html += '<div class="scanned-url"><strong>URL:</strong> ' + data.Info.URL + '</div>';
-                        }
-                        
-                        // Show security headers status
-                        if (data && data.security_headers) {
-                            html += '<div class="security-headers"><h4>Security Headers:</h4>';
-                            for (var header in data.security_headers) {
-                                var headerData = data.security_headers[header];
-                                if (headerData && headerData.length > 0) {
-                                    html += '<div class="header-item secure">✓ ' + header + ': <span class="success">Configured</span></div>';
+                        // Use AJAX to format results server-side for consistency
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'quickscan_format_results',
+                                results: JSON.stringify(jsonResponse.data),
+                                nonce: nonce
+                            },
+                            success: function(formatted) {
+                                if (formatted.success) {
+                                    $('#results-content').html(formatted.data);
                                 } else {
-                                    html += '<div class="header-item vulnerable">✗ ' + header + ': <span class="error">Missing</span></div>';
+                                    // Fallback to JSON display
+                                    $('#results-content').html('<details><summary>View Raw JSON Results</summary><pre>' + JSON.stringify(jsonResponse.data, null, 2) + '</pre></details>');
                                 }
+                            },
+                            error: function() {
+                                // Fallback to JSON display
+                                $('#results-content').html('<details><summary>View Raw JSON Results</summary><pre>' + JSON.stringify(jsonResponse.data, null, 2) + '</pre></details>');
                             }
-                            html += '</div>';
-                        }
-                        
-                        // Show misconfigurations
-                        if (data && data.Misconfigurations) {
-                            html += '<div class="misconfigurations"><h4>Misconfigurations:</h4>';
-                            for (var config in data.Misconfigurations) {
-                                var configData = data.Misconfigurations[config];
-                                if (configData && configData.Vulnerable) {
-                                    html += '<div class="config-item vulnerable">⚠️ ' + config + ': <span class="error">' + configData.Issue + '</span></div>';
-                                }
-                            }
-                            html += '</div>';
-                        }
-                        
-                        html += '<details><summary>View Raw JSON Results</summary><pre>' + JSON.stringify(jsonResponse.data, null, 2) + '</pre></details>';
-                        html += '</div>';
-                        
-                        $('#results-content').html(html);
+                        });
                     } else {
                         $('#results-content').html('<p>Scan completed but no data returned.</p>');
                     }
