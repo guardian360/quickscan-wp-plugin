@@ -101,6 +101,9 @@ class QuickscanConnector {
         register_activation_hook(__FILE__, [$this, 'activate']);
         register_deactivation_hook(__FILE__, [$this, 'deactivate']);
         
+        // Load text domain for translations
+        add_action('init', [$this, 'load_textdomain']);
+
         // Admin hooks
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'register_settings']);
@@ -134,8 +137,6 @@ class QuickscanConnector {
         // Widget registration
         add_action('widgets_init', [$this, 'register_widgets']);
         
-        // Load text domain for translations
-        add_action('init', [$this, 'load_textdomain']);
     }
     
     /**
@@ -231,31 +232,31 @@ class QuickscanConnector {
             '</svg>'
         );
 
-        // Main menu
+        // Main menu - using literal strings to avoid early translation loading
         add_menu_page(
-            __('Quickscan', 'quickscan-connector'),
-            __('Quickscan', 'quickscan-connector'),
+            'Quickscan',
+            'Quickscan',
             'manage_options',
             'quickscan',
             [$this, 'render_dashboard_page'],
             $icon_svg,
             30
         );
-        
-        // Submenu pages
+
+        // Submenu pages - using literal strings to avoid early translation loading
         add_submenu_page(
             'quickscan',
-            __('Dashboard', 'quickscan-connector'),
-            __('Dashboard', 'quickscan-connector'),
+            'Dashboard',
+            'Dashboard',
             'manage_options',
             'quickscan',
             [$this, 'render_dashboard_page']
         );
-        
+
         add_submenu_page(
             'quickscan',
-            __('Start Scan', 'quickscan-connector'),
-            __('Start Scan', 'quickscan-connector'),
+            'Start Scan',
+            'Start Scan',
             'manage_options',
             'quickscan-start-scan',
             [$this, 'render_start_scan_page']
@@ -263,8 +264,8 @@ class QuickscanConnector {
 
         add_submenu_page(
             'quickscan',
-            __('Request Account', 'quickscan-connector'),
-            __('Request Account', 'quickscan-connector'),
+            'Request Account',
+            'Request Account',
             'manage_options',
             'quickscan-account-request',
             [$this, 'render_account_request_page']
@@ -272,8 +273,8 @@ class QuickscanConnector {
 
         add_submenu_page(
             'quickscan',
-            __('Settings', 'quickscan-connector'),
-            __('Settings', 'quickscan-connector'),
+            'Settings',
+            'Settings',
             'manage_options',
             'quickscan-settings',
             [$this, 'render_settings_page']
