@@ -63,21 +63,37 @@ class Quickscan_GitHub_Updater {
         if ($checked = $transient->checked) {
             $this->get_repository_info();
 
-            $out_of_date = version_compare($this->github_response['tag_name'], $checked[$this->basename], 'gt');
+            // Check if GitHub response is valid and contains required data
+            if (!$this->github_response || !isset($this->github_response['tag_name']) || !isset($checked[$this->basename])) {
+                return $transient;
+            }
+
+            $current_version = $checked[$this->basename];
+            $latest_version = $this->github_response['tag_name'];
+
+            // Ensure both versions are strings and not empty
+            if (empty($current_version) || empty($latest_version)) {
+                return $transient;
+            }
+
+            $out_of_date = version_compare($latest_version, $current_version, 'gt');
 
             if ($out_of_date) {
                 $new_files = $this->get_zip_url();
 
-                $transient->response[$this->basename] = (object) array(
-                    'slug' => current(explode('/', $this->basename)),
-                    'plugin' => $this->basename,
-                    'new_version' => $this->github_response['tag_name'],
-                    'url' => $this->plugin['PluginURI'],
-                    'package' => $new_files,
-                    'tested' => '6.4',
-                    'requires_php' => '7.4',
-                    'compatibility' => new stdClass(),
-                );
+                // Only add to transient if we have a valid download URL
+                if ($new_files) {
+                    $transient->response[$this->basename] = (object) array(
+                        'slug' => current(explode('/', $this->basename)),
+                        'plugin' => $this->basename,
+                        'new_version' => $latest_version,
+                        'url' => $this->plugin['PluginURI'],
+                        'package' => $new_files,
+                        'tested' => '6.7',
+                        'requires_php' => '7.4',
+                        'compatibility' => new stdClass(),
+                    );
+                }
             }
         }
 
@@ -93,11 +109,16 @@ class Quickscan_GitHub_Updater {
             if ($args->slug == current(explode('/', $this->basename))) {
                 $this->get_repository_info();
 
+                // Check if GitHub response is valid
+                if (!$this->github_response || !is_array($this->github_response)) {
+                    return false;
+                }
+
                 $plugin = array(
                     'name' => $this->plugin['Name'],
                     'slug' => $this->basename,
                     'requires' => '5.0',
-                    'tested' => '6.4',
+                    'tested' => '6.7',
                     'requires_php' => '7.4',
                     'rating' => 0,
                     'ratings' => array(5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0),
@@ -105,16 +126,16 @@ class Quickscan_GitHub_Updater {
                     'support_threads' => 0,
                     'support_threads_resolved' => 0,
                     'downloaded' => 0,
-                    'last_updated' => $this->github_response['published_at'],
-                    'added' => $this->github_response['published_at'],
+                    'last_updated' => isset($this->github_response['published_at']) ? $this->github_response['published_at'] : date('Y-m-d'),
+                    'added' => isset($this->github_response['published_at']) ? $this->github_response['published_at'] : date('Y-m-d'),
                     'homepage' => $this->plugin['PluginURI'],
                     'sections' => array(
                         'description' => $this->plugin['Description'],
                         'installation' => 'Upload the Quickscan Connector plugin to your site, activate it, and configure your Quickscan credentials.',
-                        'changelog' => class_exists('Parsedown') ? Parsedown::instance()->parse($this->github_response['body']) : $this->github_response['body'],
+                        'changelog' => isset($this->github_response['body']) ? (class_exists('Parsedown') ? Parsedown::instance()->parse($this->github_response['body']) : $this->github_response['body']) : 'No changelog available.',
                     ),
                     'download_link' => $this->get_zip_url(),
-                    'version' => $this->github_response['tag_name'],
+                    'version' => isset($this->github_response['tag_name']) ? $this->github_response['tag_name'] : '1.0.0',
                     'author' => $this->plugin['AuthorName'],
                 );
 
@@ -146,16 +167,25 @@ class Quickscan_GitHub_Updater {
     }
 
     private function get_zip_url() {
+        // Check if GitHub response is valid
+        if (!$this->github_response || !is_array($this->github_response)) {
+            return false;
+        }
+
         if (!empty($this->github_response['zipball_url'])) {
             return $this->github_response['zipball_url'];
         }
 
-        return sprintf(
-            'https://github.com/%s/%s/archive/refs/tags/%s.zip',
-            $this->username,
-            $this->repository,
-            $this->github_response['tag_name']
-        );
+        if (!empty($this->github_response['tag_name'])) {
+            return sprintf(
+                'https://github.com/%s/%s/archive/refs/tags/%s.zip',
+                $this->username,
+                $this->repository,
+                $this->github_response['tag_name']
+            );
+        }
+
+        return false;
     }
 
     public function in_plugin_update_message($data, $response) {

@@ -176,7 +176,7 @@ class QuickscanConnector {
         // Set default options
         add_option('quickscan_enable_logging', true);
         add_option('quickscan_show_signature', true);
-        add_option('quickscan_signature_text', __('Powered by Guardian360', 'quickscan-connector'));
+        add_option('quickscan_signature_text', 'Powered by Guardian360'); // Use literal string during activation
         add_option('quickscan_api_version', 'v2'); // Default to free version
         
         // Flush rewrite rules
