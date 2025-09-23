@@ -133,6 +133,9 @@ class QuickscanConnector {
         
         // Frontend assets
         add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
+
+        // Frontend localization - use wp_footer to ensure textdomain is loaded
+        add_action('wp_footer', [$this, 'localize_frontend_scripts']);
         
         // Widget registration
         add_action('widgets_init', [$this, 'register_widgets']);
@@ -987,11 +990,11 @@ class QuickscanConnector {
             return;
         }
         
-        // Register the security scanner block
+        // Register the security scanner block - using literal strings to avoid early translation loading
         $block_args = array(
             'api_version' => 2,
-            'title' => __('Security Scanner', 'quickscan-connector'),
-            'description' => __('Add a security scanner form to scan websites for vulnerabilities', 'quickscan-connector'),
+            'title' => 'Security Scanner',
+            'description' => 'Add a security scanner form to scan websites for vulnerabilities',
             'category' => 'common',
             'icon' => 'shield',
             'keywords' => array('security', 'scan', 'quickscan', 'vulnerability'),
@@ -1062,6 +1065,18 @@ class QuickscanConnector {
             true
         );
         
+        // Localization moved to separate function to avoid early translation loading
+    }
+
+    /**
+     * Localize frontend scripts - runs after textdomain is loaded
+     */
+    public function localize_frontend_scripts() {
+        // Only run if the script is enqueued
+        if (!wp_script_is('quickscan-frontend', 'enqueued')) {
+            return;
+        }
+
         // Determine if current user has Pro credentials
         $current_user_id = get_current_user_id();
         $has_pro_credentials = false;
@@ -1113,7 +1128,7 @@ class QuickscanConnector {
             ]
         ]);
     }
-    
+
     /**
      * Enqueue block editor assets
      */
