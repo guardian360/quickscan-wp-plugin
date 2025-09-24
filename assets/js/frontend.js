@@ -221,12 +221,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         html += '</div>';
 
-        // Check if user has Pro access
-        const isPro = quickscan_ajax && quickscan_ajax.is_pro === 'true';
+        // Add attribution (always shown)
+        if (quickscan_ajax && quickscan_ajax.show_signature) {
+            html += '<div class="quickscan-signature" style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">';
 
-        if (!isPro) {
-            html += '<div class="quickscan-free-notice" style="margin-top: 10px; font-size: 12px; color: #666;">';
-            html += '🆓 Free Version - <a href="' + quickscan_ajax.admin_url + 'admin.php?page=quickscan-account-request">Upgrade to Pro</a> for email reports and advanced features';
+            if (quickscan_ajax.signature_style === 'logo') {
+                html += '<a href="' + quickscan_ajax.signature_url + '" target="_blank" rel="noopener noreferrer">';
+                html += '<img src="' + quickscan_ajax.logo_url + '" alt="Guardian360 Quickscan" style="height: 16px; width: auto; opacity: 0.7; transition: opacity 0.3s ease;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">';
+                html += '</a>';
+            } else {
+                html += '<a href="' + quickscan_ajax.signature_url + '" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #999; text-decoration: none;">';
+                html += quickscan_ajax.signature_text;
+                html += '</a>';
+            }
+
             html += '</div>';
         }
 
