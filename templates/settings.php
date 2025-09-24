@@ -96,8 +96,22 @@ $has_credentials = !empty($stored_email);
                         </td>
                     </tr>
                 </table>
+
+                <p class="submit">
+                    <button type="button" id="test-credentials" class="button button-secondary">
+                        <?php _e('Test Credentials', 'quickscan-connector'); ?>
+                    </button>
+                    <button type="submit" class="button button-primary">
+                        <?php _e('Save Credentials', 'quickscan-connector'); ?>
+                    </button>
+                    <?php if ($has_credentials): ?>
+                        <button type="button" id="clear-credentials" class="button button-secondary" style="margin-left: 10px;">
+                            <?php _e('Clear Credentials', 'quickscan-connector'); ?>
+                        </button>
+                    <?php endif; ?>
+                </p>
             </div>
-            
+
             <!-- New Account Registration -->
             <div id="new-account-form" class="credential-form" style="display: none;">
                 <h3><?php _e('Request Quickscan Account Access', 'quickscan-connector'); ?></h3>
@@ -126,20 +140,6 @@ $has_credentials = !empty($stored_email);
                     <?php _e('Already submitted a request? You\'ll receive your credentials via email once approved. Then return here to login with your new account.', 'quickscan-connector'); ?>
                 </p>
             </div>
-            
-            <p class="submit">
-                <button type="button" id="test-credentials" class="button button-secondary">
-                    <?php _e('Test Credentials', 'quickscan-connector'); ?>
-                </button>
-                <button type="submit" class="button button-primary">
-                    <?php _e('Save Credentials', 'quickscan-connector'); ?>
-                </button>
-                <?php if ($has_credentials): ?>
-                    <button type="button" id="clear-credentials" class="button button-secondary" style="margin-left: 10px;">
-                        <?php _e('Clear Credentials', 'quickscan-connector'); ?>
-                    </button>
-                <?php endif; ?>
-            </p>
         </form>
         
         <div id="credential-result" style="margin-top: 15px;"></div>
