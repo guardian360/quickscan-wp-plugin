@@ -669,7 +669,26 @@ class QuickscanConnector {
         
         return true;
     }
-    
+
+    /**
+     * Clear stored user credentials
+     */
+    public function clear_user_credentials() {
+        $current_user_id = get_current_user_id();
+        if (!$current_user_id) {
+            return false;
+        }
+
+        // Remove stored credentials
+        delete_user_meta($current_user_id, 'quickscan_email');
+        delete_user_meta($current_user_id, 'quickscan_password');
+
+        // Clear any existing token
+        delete_transient('quickscan_api_token_' . $current_user_id);
+
+        return true;
+    }
+
     /**
      * Authenticate with Guardian360 API and get token
      */
@@ -882,12 +901,24 @@ class QuickscanConnector {
         $email = sanitize_email($_POST['email'] ?? '');
         $password = sanitize_text_field($_POST['password'] ?? '');
         $use_wp_credentials = ($_POST['use_wp_credentials'] ?? '') === 'true';
-        
+
+        // Check if this is a clear credentials request (both email and password empty)
+        if (empty($email) && empty($password)) {
+            // Clear credentials
+            if ($this->clear_user_credentials()) {
+                wp_send_json_success('Credentials cleared successfully');
+            } else {
+                wp_send_json_error('Failed to clear credentials');
+            }
+            return;
+        }
+
+        // For saving credentials, both email and password are required
         if (empty($email) || empty($password)) {
             wp_send_json_error('Email and password are required');
             return;
         }
-        
+
         if ($this->save_user_credentials($email, $password, $use_wp_credentials)) {
             wp_send_json_success('Credentials saved successfully');
         } else {

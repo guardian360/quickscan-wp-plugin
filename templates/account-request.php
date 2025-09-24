@@ -49,20 +49,20 @@ if (!defined('ABSPATH')) {
                 <h3><?php _e('Benefits of Your Quickscan Account', 'quickscan-connector'); ?></h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; margin-top: 10px;">
                     <div>
-                        <h4><?php _e('🔍 Advanced Security Scanning', 'quickscan-connector'); ?></h4>
-                        <p><?php _e('Comprehensive vulnerability detection and security analysis', 'quickscan-connector'); ?></p>
+                        <h4><?php _e('👥 User Activity Tracking', 'quickscan-connector'); ?></h4>
+                        <p><?php _e('View a list of all users who have requested PDF reports from your site', 'quickscan-connector'); ?></p>
                     </div>
                     <div>
-                        <h4><?php _e('📊 Detailed Reporting', 'quickscan-connector'); ?></h4>
-                        <p><?php _e('In-depth reports with actionable security recommendations', 'quickscan-connector'); ?></p>
+                        <h4><?php _e('🔒 Secure Dashboard Access', 'quickscan-connector'); ?></h4>
+                        <p><?php _e('Access scan results through a secure, authenticated environment', 'quickscan-connector'); ?></p>
                     </div>
                     <div>
-                        <h4><?php _e('📈 Historical Tracking', 'quickscan-connector'); ?></h4>
-                        <p><?php _e('View and track your website\'s security improvements over time', 'quickscan-connector'); ?></p>
+                        <h4><?php _e('🎨 White-Label Reports', 'quickscan-connector'); ?></h4>
+                        <p><?php _e('Customize PDF reports with your own branding and company information', 'quickscan-connector'); ?></p>
                     </div>
                     <div>
-                        <h4><?php _e('💬 Priority Support', 'quickscan-connector'); ?></h4>
-                        <p><?php _e('Direct access to our security experts for guidance and support', 'quickscan-connector'); ?></p>
+                        <h4><?php _e('⚙️ Administrative Controls', 'quickscan-connector'); ?></h4>
+                        <p><?php _e('Control PDF report delivery and manage scanning functionality', 'quickscan-connector'); ?></p>
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@ if (!defined('ABSPATH')) {
                 <div style="display: flex; align-items: center; margin: 10px 0;padding-left:50px;">
                     <div style="background: #46b450; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; left:15px; position:absolute;">✓</div>
                     <div>
-                        <strong><?php _e('Start Scanning', 'quickscan-connector'); ?></strong> - <?php _e('Begin securing your websites with professional-grade security analysis', 'quickscan-connector'); ?>
+                        <strong><?php _e('Access Pro Features', 'quickscan-connector'); ?></strong> - <?php _e('Configure credentials in plugin settings to unlock administrative controls and white-label features', 'quickscan-connector'); ?>
                     </div>
                 </div>
             </div>

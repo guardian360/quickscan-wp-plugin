@@ -27,15 +27,6 @@ $has_credentials = !empty($stored_email);
         <div class="notice notice-success">
             <p><strong><?php _e('Connected to Quickscan', 'quickscan-connector'); ?></strong> - <?php echo esc_html($stored_email); ?></p>
         </div>
-    <?php else: ?>
-        <div class="notice notice-warning">
-            <p><?php _e('Please configure your Quickscan credentials to get started.', 'quickscan-connector'); ?></p>
-            <p>
-                <a href="<?php echo admin_url('admin.php?page=quickscan-settings'); ?>" class="button button-primary">
-                    <?php _e('Setup Credentials', 'quickscan-connector'); ?>
-                </a>
-            </p>
-        </div>
     <?php endif; ?>
 
     <div class="dashboard-widgets-wrap">
@@ -45,6 +36,18 @@ $has_credentials = !empty($stored_email);
             <div class="postbox-container" style="width: 100%;">
                 <div class="meta-box-sortables">
                             <h2><?php _e('Welcome to Guardian360 Quickscan', 'quickscan-connector'); ?></h2>
+
+                            <?php if (!$has_credentials): ?>
+                            <!-- Free Plugin Notification -->
+                            <div class="notice notice-info is-dismissible" id="quickscan-pro-notification" style="margin: 20px 0;">
+                                <p>
+                                    <?php _e('Your Guardian360 Quickscan plugin is ready to use! For additional administrative features like user tracking, white-label reports, and secure result management, upgrade to our Pro version at no cost. All that\'s required is a complimentary Quickscan Account subscription.', 'quickscan-connector'); ?>
+                                    <a href="#quickscan-pro-upgrade" class="quickscan-scroll-to-pro" style="text-decoration: none; font-weight: bold;">
+                                        <?php _e('Learn more about Pro features →', 'quickscan-connector'); ?>
+                                    </a>
+                                </p>
+                            </div>
+                            <?php endif; ?>
 
                       <div class="postbox">
                         <div class="inside">
@@ -81,16 +84,6 @@ $has_credentials = !empty($stored_email);
                                     </details>
                                 </div>
 
-                                <?php if (!$has_credentials): ?>
-                                <div class="card" style="border-left: 4px solid #dc3545;">
-                                    <h3><?php _e('Setup Required', 'quickscan-connector'); ?></h3>
-                                    <p><?php _e('Configure your Quickscan account credentials to enable scanning functionality.', 'quickscan-connector'); ?></p>
-                                    <a href="<?php echo admin_url('admin.php?page=quickscan-settings'); ?>" class="button button-primary">
-                                        <?php _e('Configure Credentials', 'quickscan-connector'); ?>
-                                    </a>
-                                </div>
-                                <?php endif; ?>
-
                             </div>
                         </div>
                     </div>
@@ -101,7 +94,7 @@ $has_credentials = !empty($stored_email);
 
     <?php if (!$has_credentials): ?>
     <!-- Account Upgrade Section for Unregistered Users -->
-    <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e5e5; clear: both; width: 100%;">
+    <div id="quickscan-pro-upgrade" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e5e5; clear: both; width: 100%;">
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: start;">
 
             <!-- Free vs Pro Section (Left - 2/3) -->
@@ -111,24 +104,26 @@ $has_credentials = !empty($stored_email);
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
                         <div>
-                            <h3 style="color: #e8f4fd;">🆓 <?php _e('Free Version', 'quickscan-connector'); ?></h3>
+                            <h3 style="color: #e8f4fd;">🔧 <?php _e('Basic Version', 'quickscan-connector'); ?></h3>
                             <ul style="list-style: none; padding: 0; margin: 10px 0;">
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Basic security scanning</li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Complete security scanning</li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Full vulnerability reports</li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Gutenberg blocks & widgets</li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Shortcode support</li>
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Scan completion notification</li>
-                                <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">Detailed scan results</span></li>
-                                <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">PDF email reports</span></li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> PDF email reports</li>
+                                <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">User activity tracking</span></li>
+                                <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">White-label reports</span></li>
+                                <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">Secure admin dashboard</span></li>
                             </ul>
                         </div>
                         <div>
                             <h3 style="color: #e8f4fd;">⭐ <?php _e('Pro Version', 'quickscan-connector'); ?></h3>
                             <ul style="list-style: none; padding: 0; margin: 10px 0;">
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Everything in Free</li>
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Detailed vulnerability reports</strong></li>
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Security headers analysis</strong></li>
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>CMS detection & analysis</strong></li>
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Direct PDF email integration</strong></li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Everything in Basic</li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>User activity tracking</strong></li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Secure results dashboard</strong></li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>White-label PDF reports</strong></li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Administrative controls</strong></li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Priority support</strong></li>
                             </ul>
                         </div>
@@ -136,7 +131,7 @@ $has_credentials = !empty($stored_email);
 
                     <div style="text-align: center; margin-top: 25px;">
                         <p style="margin-bottom: 15px; font-size: 16px; color: #e8f4fd;">
-                            <?php _e('Currently using: Free Version', 'quickscan-connector'); ?>
+                            <?php _e('Currently using: Basic Version', 'quickscan-connector'); ?>
                         </p>
                         <a href="<?php echo admin_url('admin.php?page=quickscan-account-request'); ?>" class="button button-hero" style="background: white; color: #2E3285; border: none; font-weight: bold; padding: 12px 24px;">
                             <?php _e('Request Pro Account →', 'quickscan-connector'); ?>
@@ -248,4 +243,43 @@ code {
     border-radius: 3px;
     font-family: Monaco, Consolas, monospace;
 }
+
+.quickscan-scroll-to-pro {
+    transition: color 0.3s ease;
+}
+
+.quickscan-scroll-to-pro:hover {
+    color: #0073aa !important;
+}
+
+#quickscan-pro-upgrade {
+    scroll-margin-top: 20px;
+}
 </style>
+
+<script>
+jQuery(document).ready(function($) {
+    // Handle smooth scrolling to Pro upgrade section
+    $('.quickscan-scroll-to-pro').on('click', function(e) {
+        e.preventDefault();
+
+        const target = $($(this).attr('href'));
+        if (target.length) {
+            $('html, body').animate({
+                scrollTop: target.offset().top - 20
+            }, 800);
+        }
+    });
+
+    // Handle dismissible notification
+    $(document).on('click', '#quickscan-pro-notification .notice-dismiss', function() {
+        // Store dismissal state in localStorage
+        localStorage.setItem('quickscan_pro_notification_dismissed', 'true');
+    });
+
+    // Check if notification was previously dismissed
+    if (localStorage.getItem('quickscan_pro_notification_dismissed') === 'true') {
+        $('#quickscan-pro-notification').hide();
+    }
+});
+</script>
