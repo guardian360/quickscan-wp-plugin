@@ -16,6 +16,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 // Remove plugin options
 delete_option('quickscan_enable_logging');
 delete_option('quickscan_show_signature');
+delete_option('quickscan_signature_style');
 delete_option('quickscan_signature_text');
 
 // Remove user meta for all users

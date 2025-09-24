@@ -157,17 +157,34 @@ $has_credentials = !empty($stored_email);
             <table class="form-table">
                 <tr>
                     <th scope="row">
-                        <label for="quickscan_show_signature"><?php _e('Show Guardian360 Signature', 'quickscan-connector'); ?></label>
+                        <?php _e('Attribution Display', 'quickscan-connector'); ?>
                     </th>
                     <td>
-                        <input type="checkbox"
-                               id="quickscan_show_signature"
-                               name="quickscan_show_signature"
-                               value="1"
-                               <?php checked(get_option('quickscan_show_signature', true)); ?> />
-                        <p class="description">
-                            <?php _e('Display a small Guardian360 link below frontend scanners. Help support the project!', 'quickscan-connector'); ?>
-                        </p>
+                        <fieldset>
+                            <p style="margin-top: 0; margin-bottom: 15px; font-weight: 500;">
+                                <?php _e('Choose how to display the required Guardian360 attribution below your security scanners:', 'quickscan-connector'); ?>
+                            </p>
+
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="radio"
+                                       name="quickscan_signature_style"
+                                       value="logo"
+                                       <?php checked(get_option('quickscan_signature_style', 'logo'), 'logo'); ?> />
+                                <?php _e('Show clickable Quickscan logo', 'quickscan-connector'); ?>
+                            </label>
+
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="radio"
+                                       name="quickscan_signature_style"
+                                       value="text"
+                                       <?php checked(get_option('quickscan_signature_style', 'logo'), 'text'); ?> />
+                                <?php _e('Show text link only: "Powered by Guardian360"', 'quickscan-connector'); ?>
+                            </label>
+
+                            <p class="description" style="margin-top: 15px;">
+                                <?php _e('Attribution is required and helps support this free plugin. Links direct to our GitHub repository.', 'quickscan-connector'); ?>
+                            </p>
+                        </fieldset>
                     </td>
                 </tr>
             </table>

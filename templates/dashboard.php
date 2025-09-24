@@ -160,13 +160,23 @@ $has_credentials = !empty($stored_email);
 
     </div> <!-- End Centered Content Container -->
 
-    <?php if (get_option('quickscan_show_signature', true)): ?>
     <div class="quickscan-signature" style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; clear: both; width: 100%;">
-        <a href="https://guardian360.eu" target="_blank" rel="noopener noreferrer">
-            <?php echo esc_html(__('Powered by Guardian360', 'quickscan-connector')); ?>
-        </a>
+        <?php
+        $signature_style = get_option('quickscan_signature_style', 'logo');
+        if ($signature_style === 'logo'): ?>
+            <a href="https://github.com/guardian360/quickscan-wp-plugin" target="_blank" rel="noopener noreferrer">
+                <img src="<?php echo QUICKSCAN_PLUGIN_URL; ?>assets/images/logo_guardian360_quickscan.png"
+                     alt="Guardian360 Quickscan"
+                     style="height: 24px; width: auto; opacity: 0.7; transition: opacity 0.3s ease;"
+                     onmouseover="this.style.opacity='1'"
+                     onmouseout="this.style.opacity='0.7'" />
+            </a>
+        <?php else: ?>
+            <a href="https://github.com/guardian360/quickscan-wp-plugin" target="_blank" rel="noopener noreferrer">
+                <?php echo esc_html(__('Powered by Guardian360', 'quickscan-connector')); ?>
+            </a>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 
 </div>
 

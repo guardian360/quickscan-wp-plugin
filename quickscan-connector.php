@@ -180,6 +180,7 @@ class QuickscanConnector {
         // Set default options
         add_option('quickscan_enable_logging', true);
         add_option('quickscan_show_signature', true);
+        add_option('quickscan_signature_style', 'logo');
         add_option('quickscan_signature_text', 'Powered by Guardian360'); // Use literal string during activation
         add_option('quickscan_api_version', 'v2'); // Default to free version
         
@@ -290,6 +291,7 @@ class QuickscanConnector {
     public function register_settings() {
         register_setting('quickscan_settings', 'quickscan_enable_logging');
         register_setting('quickscan_settings', 'quickscan_show_signature');
+        register_setting('quickscan_settings', 'quickscan_signature_style');
     }
     
     
@@ -1108,8 +1110,11 @@ class QuickscanConnector {
         wp_localize_script('quickscan-frontend', 'quickscan_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('quickscan_nonce'),
-            'show_signature' => get_option('quickscan_show_signature', true),
+            'show_signature' => true, // Always show attribution now
+            'signature_style' => get_option('quickscan_signature_style', 'logo'),
             'signature_text' => __('Powered by Guardian360', 'quickscan-connector'),
+            'signature_url' => 'https://github.com/guardian360/quickscan-wp-plugin',
+            'logo_url' => QUICKSCAN_PLUGIN_URL . 'assets/images/logo_guardian360_quickscan.png',
             'is_pro' => $has_pro_credentials ? 'true' : 'false',
             'admin_url' => admin_url(),
             'strings' => [
