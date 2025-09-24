@@ -182,7 +182,7 @@ $has_credentials = !empty($stored_email);
                             </label>
 
                             <p class="description" style="margin-top: 15px;">
-                                <?php _e('Attribution is required and helps support this free plugin. Links direct to our GitHub repository.', 'quickscan-connector'); ?>
+                                <?php _e('Attribution is required and helps support this free plugin. Links direct to our Quickscan platform.', 'quickscan-connector'); ?>
                             </p>
                         </fieldset>
                     </td>

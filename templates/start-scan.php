@@ -70,16 +70,16 @@ if (!defined('ABSPATH')) {
                 <div style="font-size: 11px; color: #999; margin-bottom: 8px;">
                     ⚡ <?php echo esc_html(__('Powered by Guardian360', 'quickscan-connector')); ?>
                 </div>
-                <a href="https://github.com/guardian360/quickscan-wp-plugin" target="_blank" rel="noopener noreferrer">
+                <a href="https://guardian360.eu/quickscan" target="_blank" rel="noopener noreferrer">
                     <img src="<?php echo QUICKSCAN_PLUGIN_URL; ?>assets/images/logo_guardian360_quickscan.png"
                          alt="Guardian360 Quickscan Security Scanner"
-                         title="Visit Guardian360 Quickscan on GitHub"
+                         title="Visit Guardian360 Quickscan Platform"
                          style="width: 200px; height: auto; opacity: 0.7; transition: opacity 0.3s ease;"
                          onmouseover="this.style.opacity='1'"
                          onmouseout="this.style.opacity='0.7'" />
                 </a>
             <?php else: ?>
-                <a href="https://github.com/guardian360/quickscan-wp-plugin" target="_blank" rel="noopener noreferrer">
+                <a href="https://guardian360.eu/quickscan" target="_blank" rel="noopener noreferrer">
                     ⚡ <?php echo esc_html(__('Powered by Guardian360', 'quickscan-connector')); ?>
                 </a>
             <?php endif; ?>

@@ -1113,7 +1113,7 @@ class QuickscanConnector {
             'show_signature' => true, // Always show attribution now
             'signature_style' => get_option('quickscan_signature_style', 'logo'),
             'signature_text' => __('Powered by Guardian360', 'quickscan-connector'),
-            'signature_url' => 'https://github.com/guardian360/quickscan-wp-plugin',
+            'signature_url' => 'https://guardian360.eu/quickscan',
             'logo_url' => QUICKSCAN_PLUGIN_URL . 'assets/images/logo_guardian360_quickscan.png',
             'is_pro' => $has_pro_credentials ? 'true' : 'false',
             'admin_url' => admin_url(),

@@ -1,24 +1,34 @@
 # Quickscan Connector WordPress Plugin
 
-A professional WordPress plugin that integrates with the Quickscan API to provide enterprise-grade website security scanning functionality with a vetted user access system.
+A professional WordPress plugin that integrates with the Guardian360 Quickscan API to provide comprehensive website security scanning functionality. Available in Basic (free, no account required) and Pro (free with account) versions.
 
 ## Description
 
-The Quickscan Connector plugin enables WordPress administrators to perform comprehensive security scans using the Quickscan API. The plugin features a professional vetting system where new users request access through an integrated Zoho CRM form, ensuring quality control and personalized onboarding for each user.
+The Quickscan Connector plugin enables WordPress users to perform comprehensive security scans using the Guardian360 Quickscan API. The Basic version works immediately with full scan results, while the Pro version offers additional administrative features through a vetted account system with personalized onboarding.
 
 ## Key Features
 
 ### 🛡️ Security Scanning
-- Professional website security analysis via Quickscan API
-- Real-time scan initiation and monitoring
-- Comprehensive vulnerability detection
-- Direct integration with Quickscan's enterprise platform
+- Complete security analysis via Guardian360 Quickscan API
+- Full vulnerability reports for all users (Basic and Pro)
+- PDF email reports available to all users
+- Real-time scan results with comprehensive findings
 
-### 🔐 Vetted Access System
-- **Account Request Process**: New users submit requests through embedded Zoho CRM form
-- **24-Hour Review**: Each request is personally reviewed for quality assurance
-- **Professional Onboarding**: Approved users receive personalized setup assistance
-- **No WordPress Credential Storage**: All authentication handled through Quickscan platform
+### 💼 Two Versions Available
+
+#### 🔧 Basic Version (Free - No Account Required)
+- Complete security scanning with full results
+- Gutenberg blocks, widgets, and shortcodes
+- PDF email report functionality
+- Ready to use immediately
+
+#### ⭐ Pro Version (Free - Requires Account)
+- Everything in Basic version
+- **User activity tracking** - View list of users who requested PDF reports
+- **Secure admin dashboard** - Access results in authenticated environment
+- **White-label PDF reports** - Customize reports with your branding
+- **Administrative controls** - Manage PDF delivery and scanning features
+- **Priority support** - Direct access to security experts
 
 ### 🎛️ Admin Dashboard
 - **Dashboard**: Overview and quick access to scanning features
@@ -71,8 +81,7 @@ cd quickscan-connector
 5. Click **Save Credentials** to store securely
 
 ### Plugin Settings
-- **Enable Logging**: Toggle API error and debug logging
-- **Show Guardian360 Signature**: Display attribution on frontend scanners
+- **Attribution Display**: Choose between clickable logo or text link (attribution required)
 
 ## Usage
 
@@ -113,11 +122,10 @@ Basic implementation:
 
 With parameters:
 ```php
-[quickscan type="quick" title="Security Check" placeholder="Enter URL..." button_text="Scan Now"]
+[quickscan title="Security Check" placeholder="Enter URL..." button_text="Scan Now"]
 ```
 
 Available parameters:
-- `type`: Scan type (default: "quick")
 - `title`: Scanner title text
 - `placeholder`: Input field placeholder
 - `button_text`: Submit button text
@@ -134,20 +142,20 @@ The Quickscan platform maintains high standards through a professional vetting p
 3. **Approval**: Receive credentials and personalized onboarding within 24 hours
 4. **Support**: Access priority support from security experts
 
-### Benefits of Vetted Access
-- Personalized configuration for your specific needs
-- Maintained platform integrity and performance
-- Tailored security recommendations
-- Direct support channel with experts
-- Access to historical scan data and trends
+### Pro Version Benefits
+- **User Activity Tracking**: View all users who requested PDF reports from your site
+- **Secure Dashboard Access**: Access scan results through authenticated environment
+- **White-Label Reports**: Customize PDF reports with your own branding and company information
+- **Administrative Controls**: Control PDF report delivery and manage scanning functionality
+- **Priority Support**: Direct support channel with security experts
 
 ## API Integration
 
 The plugin connects to the Guardian360 Quickscan API:
-- **Endpoint**: `https://quickscan.guardian360.nl/api/v1`
-- **Authentication**: Quickscan credentials (no WordPress credentials used)
+- **Basic Version**: Uses public API (`https://quickscan.guardian360.nl/api/v2`) - no authentication required
+- **Pro Version**: Uses authenticated API (`https://quickscan.guardian360.nl/api/v1`) with user credentials
 - **Data Storage**: All scan data stored on Quickscan servers
-- **Privacy**: No email or scan data stored in WordPress
+- **Privacy**: No email or scan data stored locally in WordPress
 
 ## Plugin Structure
 
@@ -194,7 +202,7 @@ quickscan-connector/
 1. Verify credentials in Quickscan → Settings
 2. Check internet connectivity
 3. Ensure firewall allows outbound HTTPS
-4. Enable logging to see detailed errors
+4. Contact support if connection issues persist
 
 ### Account Request Issues
 1. Ensure all form fields are completed
@@ -220,22 +228,32 @@ define('WP_DEBUG_DISPLAY', false);
 
 For support and assistance:
 - **Email**: support@guardian360.nl
-- **Website**: [guardian360.nl](https://guardian360.nl)
+- **Website**: [guardian360.eu](https://guardian360.eu)
+- **Quickscan Platform**: [guardian360.eu/quickscan](https://guardian360.eu/quickscan)
 - **GitHub**: [github.com/guardian360/quickscan-wp-plugin](https://github.com/guardian360/quickscan-wp-plugin)
 
 ## Changelog
 
+### Version 1.0.1
+- Updated Basic vs Pro messaging with accurate feature descriptions
+- Removed password requirement for clearing credentials
+- Improved attribution display with enforced branding
+- Added logo/text choice for attribution with clickable links
+- Fixed frontend upgrade messages (removed inappropriate admin CTAs)
+- Enhanced accessibility with proper alt and title attributes
+- Updated all links to point to guardian360.eu/quickscan platform
+
 ### Version 1.0.0
-- Initial release
-- Quickscan API integration
-- Vetted account request system via Zoho CRM
-- Gutenberg block support
-- Widget functionality
-- Shortcode system
-- Secure credential management
+- Initial release with Basic and Pro versions (both free)
+- Complete security scanning available to all users
+- Guardian360 Quickscan API integration (v1/v2 endpoints)
+- Pro account request system via Zoho CRM for administrative features
+- Gutenberg block, widget, and shortcode support
+- Secure credential management for Pro users
 - Admin dashboard interface
-- Removed email storage in favor of CRM integration
-- Removed local scan data storage (now API-only)
+- PDF email report functionality for all users
+- User activity tracking for Pro accounts
+- White-label report options for Pro accounts
 
 ## License
 
@@ -243,7 +261,7 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Credits
 
-Developed by [Guardian360](https://guardian360.nl)
+Developed by [Guardian360](https://guardian360.eu)
 
 ---
 
