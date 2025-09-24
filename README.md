@@ -1,12 +1,12 @@
 # Quickscan Connector WordPress Plugin
 
+[![Download Plugin](https://img.shields.io/badge/Download-WordPress%20Plugin-blue?style=for-the-badge&logo=wordpress)](./quickscan-connector.zip)
+
+**[📦 Download quickscan-connector.zip](./quickscan-connector.zip)** | **[📖 View Documentation](#installation)** | **[🌟 Request Pro Account](https://quickscan.guardian360.nl/request-account)**
+
+---
+
 A professional WordPress plugin that integrates with the Guardian360 Quickscan API to provide comprehensive website security scanning functionality. Available in Basic (free, no account required) and Pro (free with account) versions.
-
-## 🚀 Quick Download
-
-**[⬇️ Download Latest Version (quickscan-connector.zip)](./quickscan-connector.zip)**
-
-*Ready-to-install WordPress plugin - simply upload to your WordPress site and activate!*
 
 ## Description
 
