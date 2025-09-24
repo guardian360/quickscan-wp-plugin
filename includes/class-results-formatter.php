@@ -110,7 +110,7 @@ class Quickscan_Results_Formatter {
      */
     private static function format_ssl_section($ssl) {
         $html = '<div class="quickscan-section quickscan-ssl">';
-        $html .= '<h3>' . __('SSL Certificates', 'quickscan-connector') . '</h3>';
+        $html .= '<h3>' . __('SSL Certificates', 'quickscan-connector') . '<button type="button" class="quickscan-info-icon" onclick="showSectionInfo(\'ssl\')" title="' . __('More information', 'quickscan-connector') . '">ⓘ</button></h3>';
         $html .= '<table class="quickscan-table">';
 
         foreach ($ssl as $cipher => $data) {
@@ -150,7 +150,7 @@ class Quickscan_Results_Formatter {
      */
     private static function format_csp_section($csp) {
         $html = '<div class="quickscan-section quickscan-csp">';
-        $html .= '<h3>' . __('Content Security Policy', 'quickscan-connector') . '</h3>';
+        $html .= '<h3>' . __('Content Security Policy', 'quickscan-connector') . '<button type="button" class="quickscan-info-icon" onclick="showSectionInfo(\'csp\')" title="' . __('More information', 'quickscan-connector') . '">ⓘ</button></h3>';
         $html .= '<table class="quickscan-table">';
 
         if (isset($csp['Policies']) && is_array($csp['Policies'])) {
@@ -187,7 +187,7 @@ class Quickscan_Results_Formatter {
      */
     private static function format_dns_section($dns) {
         $html = '<div class="quickscan-section quickscan-dns">';
-        $html .= '<h3>' . __('DNS', 'quickscan-connector') . '</h3>';
+        $html .= '<h3>' . __('DNS', 'quickscan-connector') . '<button type="button" class="quickscan-info-icon" onclick="showSectionInfo(\'dns\')" title="' . __('More information', 'quickscan-connector') . '">ⓘ</button></h3>';
         $html .= '<table class="quickscan-table">';
 
         foreach ($dns as $record => $data) {
@@ -210,7 +210,7 @@ class Quickscan_Results_Formatter {
      */
     private static function format_security_headers_section($headers) {
         $html = '<div class="quickscan-section quickscan-headers">';
-        $html .= '<h3>' . __('Security Headers', 'quickscan-connector') . '</h3>';
+        $html .= '<h3>' . __('Security Headers', 'quickscan-connector') . '<button type="button" class="quickscan-info-icon" onclick="showSectionInfo(\'headers\')" title="' . __('More information', 'quickscan-connector') . '">ⓘ</button></h3>';
         $html .= '<table class="quickscan-table">';
 
         foreach ($headers as $header => $data) {
@@ -243,7 +243,7 @@ class Quickscan_Results_Formatter {
      */
     private static function format_misconfigurations_section($misconfigs) {
         $html = '<div class="quickscan-section quickscan-misconfigurations">';
-        $html .= '<h3>' . __('Misconfigurations', 'quickscan-connector') . '</h3>';
+        $html .= '<h3>' . __('Misconfigurations', 'quickscan-connector') . '<button type="button" class="quickscan-info-icon" onclick="showSectionInfo(\'misconfigurations\')" title="' . __('More information', 'quickscan-connector') . '">ⓘ</button></h3>';
         $html .= '<table class="quickscan-table">';
 
         foreach ($misconfigs as $config => $data) {
@@ -274,7 +274,7 @@ class Quickscan_Results_Formatter {
      */
     private static function format_cookies_section($cookies) {
         $html = '<div class="quickscan-section quickscan-cookies">';
-        $html .= '<h3>' . __('Cookies', 'quickscan-connector') . '</h3>';
+        $html .= '<h3>' . __('Cookies', 'quickscan-connector') . '<button type="button" class="quickscan-info-icon" onclick="showSectionInfo(\'cookies\')" title="' . __('More information', 'quickscan-connector') . '">ⓘ</button></h3>';
         $html .= '<table class="quickscan-table">';
 
         foreach ($cookies as $cookie_name => $cookie_data) {
@@ -306,21 +306,54 @@ class Quickscan_Results_Formatter {
     }
 
     /**
-     * Get CSS styles for the results display
+     * Format JSON data as nested table
      */
-    public static function get_styles() {
+    private static function format_json_as_table($data, $depth = 0) {
+        if (!is_array($data) && !is_object($data)) {
+            return '<span class="json-value">' . esc_html($data) . '</span>';
+        }
+
+        $html = '<table class="quickscan-nested-table" style="margin-left: ' . ($depth * 20) . 'px;">';
+
+        foreach ((array)$data as $key => $value) {
+            $html .= '<tr>';
+            $html .= '<td class="nested-key">' . esc_html($key) . '</td>';
+
+            if (is_array($value) || is_object($value)) {
+                $html .= '<td class="nested-value-container">';
+                $html .= '<button type="button" class="toggle-nested" onclick="toggleNestedTable(this)">▶</button>';
+                $html .= '<div class="nested-content" style="display: none;">';
+                $html .= self::format_json_as_table($value, $depth + 1);
+                $html .= '</div>';
+                $html .= '</td>';
+            } else {
+                $html .= '<td class="nested-value">' . esc_html($value) . '</td>';
+            }
+
+            $html .= '</tr>';
+        }
+
+        $html .= '</table>';
+        return $html;
+    }
+
+    /**
+     * Get only CSS styles for the results display
+     */
+    public static function get_css_styles() {
         return '
         <style>
         .quickscan-results-full {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-            line-height: 1.5;
+            line-height: 1.4;
             color: #23282d;
             max-width: 100%;
             margin: 20px 0;
+            font-size: 14px;
         }
 
         .quickscan-section {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             background: #fff;
             border: 1px solid #e2e4e7;
             border-radius: 4px;
@@ -332,9 +365,39 @@ class Quickscan_Results_Formatter {
             padding: 12px 15px;
             background: #f8f9fa;
             border-bottom: 1px solid #e2e4e7;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: bold;
             color: #23282d;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .quickscan-section h3:before {
+            content: "▼";
+            position: absolute;
+            right: 45px;
+            transition: transform 0.3s ease;
+        }
+
+        .quickscan-section.collapsed h3:before {
+            transform: rotate(-90deg);
+        }
+
+        .quickscan-info-icon {
+            background: none;
+            border: none;
+            color: #0073aa;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            margin-left: 10px;
+            position: absolute;
+            right: 15px;
+        }
+
+        .quickscan-section.collapsed .quickscan-table {
+            display: none;
         }
 
         .quickscan-table {
@@ -342,17 +405,7 @@ class Quickscan_Results_Formatter {
             border-collapse: collapse;
             table-layout: auto;
             word-wrap: break-word;
-        }
-
-        /* Responsive table for smaller screens */
-        @media (max-width: 768px) {
-            .quickscan-table {
-                font-size: 14px;
-            }
-
-            .quickscan-table td {
-                padding: 8px 12px;
-            }
+            font-size: 14px;
         }
 
         .quickscan-table tr {
@@ -364,25 +417,46 @@ class Quickscan_Results_Formatter {
         }
 
         .quickscan-table td {
-            padding: 10px 15px;
+            padding: 12px 15px;
             vertical-align: top;
+            font-size: 14px;
         }
 
         .quickscan-table .label {
-            font-weight: 600;
-            width: 200px;
+            font-weight: bold;
+            width: 25%;
+            min-width: 150px;
             color: #50575e;
+            background: #fafafa;
+            font-size: 14px;
         }
 
         .quickscan-table .sub-label {
             padding-left: 30px;
             color: #50575e;
+            background: #fafafa;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .quickscan-table .section-header td {
-            background: #f8f9fa;
-            font-weight: 600;
+            background: #f0f0f0;
+            font-weight: bold;
             color: #23282d;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .quickscan-table .section-header td:before {
+            content: "▼";
+            position: absolute;
+            right: 15px;
+            font-size: 12px;
+        }
+
+        .quickscan-table .section-header.collapsed td:before {
+            content: "▶";
         }
 
         .quickscan-table .vulnerable {
@@ -393,35 +467,48 @@ class Quickscan_Results_Formatter {
             background: #f5fff5;
         }
 
+        .quickscan-table .collapsible-content {
+            display: table-row;
+        }
+
+        .quickscan-table .collapsible-content.hidden {
+            display: none;
+        }
+
         .status-vulnerable {
             color: #dc3232;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .status-secure {
             color: #46b450;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .risk-high {
             color: #dc3232;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .risk-medium {
             color: #ffb900;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .risk-low {
             color: #00a0d2;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .score {
-            font-size: 24px;
-            font-weight: 700;
-            padding: 5px 10px;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 4px 8px;
             border-radius: 4px;
         }
 
@@ -442,18 +529,18 @@ class Quickscan_Results_Formatter {
 
         .cipher-name {
             font-family: monospace;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .header-value {
             word-break: break-all;
-            font-size: 13px;
+            font-size: 14px;
             color: #666;
         }
 
         .risk-row td {
             padding-top: 0;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .cipher-row td {
@@ -461,8 +548,173 @@ class Quickscan_Results_Formatter {
         }
 
         .issue {
-            font-size: 13px;
+            font-size: 14px;
             color: #666;
+        }
+
+        /* Nested JSON table styling */
+        .quickscan-nested-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .quickscan-nested-table td {
+            padding: 6px 10px;
+            border: 1px solid #e2e4e7;
+            font-size: 14px;
+        }
+
+        .nested-key {
+            background: #f8f9fa;
+            font-weight: bold;
+            width: 40%;
+            font-size: 14px;
+        }
+
+        .nested-value {
+            font-size: 14px;
+        }
+
+        .nested-value-container {
+            position: relative;
+            font-size: 14px;
+        }
+
+        .toggle-nested {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .toggle-nested:hover {
+            color: #0073aa;
+        }
+
+        .nested-content {
+            margin-top: 8px;
+        }
+
+        .json-value {
+            font-size: 14px;
+        }
+
+        /* Modal styles */
+        .quickscan-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .quickscan-modal {
+            position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ccc;
+            max-width: 500px;
+            width: 100%;
+            max-height: 70vh;
+            overflow-y: auto;
+            margin: 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        .quickscan-modal-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e2e4e7;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quickscan-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: #23282d;
+        }
+
+        .quickscan-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+        }
+
+        .quickscan-modal-close:hover {
+            background: #e2e4e7;
+            color: #23282d;
+        }
+
+        .quickscan-modal-content {
+            padding: 20px;
+            line-height: 1.6;
+            color: #23282d;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .quickscan-table .label {
+                width: 35%;
+                min-width: 120px;
+            }
+
+            .quickscan-table td {
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .quickscan-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .quickscan-table .label {
+                width: auto;
+                min-width: 100px;
+            }
         }
         </style>
         ';

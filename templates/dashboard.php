@@ -110,7 +110,7 @@ $has_credentials = !empty($stored_email);
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Full vulnerability reports</li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Gutenberg blocks & widgets</li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Shortcode support</li>
-                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> PDF email reports</li>
+                                <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">PDF email reports</span></li>
                                 <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">User activity tracking</span></li>
                                 <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">White-label reports</span></li>
                                 <li style="padding: 3px 0;"><span style="color: #f44336;">✗</span> <span style="opacity: 0.7;">Secure admin dashboard</span></li>
@@ -120,6 +120,7 @@ $has_credentials = !empty($stored_email);
                             <h3 style="color: #e8f4fd;">⭐ <?php _e('Pro Version', 'quickscan-connector'); ?></h3>
                             <ul style="list-style: none; padding: 0; margin: 10px 0;">
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> Everything in Basic</li>
+                                <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>PDF email reports</strong></li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>User activity tracking</strong></li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>Secure results dashboard</strong></li>
                                 <li style="padding: 3px 0;"><span style="color: #4CAF50;">✓</span> <strong>White-label PDF reports</strong></li>

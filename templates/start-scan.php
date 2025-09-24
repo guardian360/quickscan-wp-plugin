@@ -158,6 +158,10 @@ jQuery(document).ready(function($) {
                             success: function(formatted) {
                                 if (formatted.success) {
                                     $('#results-content').html(formatted.data);
+                                    // Initialize scan results functionality
+                                    if (window.quickscanFunctions) {
+                                        quickscanFunctions.initializeScanResults();
+                                    }
                                 } else {
                                     // Fallback to JSON display
                                     $('#results-content').html('<details><summary>View Raw JSON Results</summary><pre>' + JSON.stringify(jsonResponse.data, null, 2) + '</pre></details>');

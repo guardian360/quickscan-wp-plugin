@@ -2,6 +2,12 @@
 
 A professional WordPress plugin that integrates with the Guardian360 Quickscan API to provide comprehensive website security scanning functionality. Available in Basic (free, no account required) and Pro (free with account) versions.
 
+## 🚀 Quick Download
+
+**[⬇️ Download Latest Version (quickscan-connector.zip)](./quickscan-connector.zip)**
+
+*Ready-to-install WordPress plugin - simply upload to your WordPress site and activate!*
+
 ## Description
 
 The Quickscan Connector plugin enables WordPress users to perform comprehensive security scans using the Guardian360 Quickscan API. The Basic version works immediately with full scan results, while the Pro version offers additional administrative features through a vetted account system with personalized onboarding.
@@ -11,7 +17,7 @@ The Quickscan Connector plugin enables WordPress users to perform comprehensive 
 ### 🛡️ Security Scanning
 - Complete security analysis via Guardian360 Quickscan API
 - Full vulnerability reports for all users (Basic and Pro)
-- PDF email reports available to all users
+- PDF email reports (Pro users only)
 - Real-time scan results with comprehensive findings
 
 ### 💼 Two Versions Available
@@ -19,11 +25,11 @@ The Quickscan Connector plugin enables WordPress users to perform comprehensive 
 #### 🔧 Basic Version (Free - No Account Required)
 - Complete security scanning with full results
 - Gutenberg blocks, widgets, and shortcodes
-- PDF email report functionality
 - Ready to use immediately
 
 #### ⭐ Pro Version (Free - Requires Account)
 - Everything in Basic version
+- **PDF email report functionality** - Receive comprehensive PDF reports via email
 - **User activity tracking** - View list of users who requested PDF reports
 - **Secure admin dashboard** - Access results in authenticated environment
 - **White-label PDF reports** - Customize reports with your branding
@@ -50,7 +56,16 @@ The Quickscan Connector plugin enables WordPress users to perform comprehensive 
 - Active internet connection for API communication
 
 ### Installation Steps
-1. Download the plugin files
+
+#### Option 1: Direct Download (Recommended)
+1. **[Download the plugin zip file](./quickscan-connector.zip)** from this repository
+2. In WordPress admin, go to **Plugins → Add New → Upload Plugin**
+3. Choose the downloaded `quickscan-connector.zip` file
+4. Click **Install Now** and then **Activate**
+5. Navigate to **Quickscan → Settings** to configure your account
+
+#### Option 2: Manual Installation
+1. Download and extract the plugin files
 2. Upload the `quickscan-connector` folder to `/wp-content/plugins/`
 3. Activate the plugin through the 'Plugins' menu in WordPress
 4. Navigate to Quickscan → Settings to configure your account
@@ -251,7 +266,7 @@ For support and assistance:
 - Gutenberg block, widget, and shortcode support
 - Secure credential management for Pro users
 - Admin dashboard interface
-- PDF email report functionality for all users
+- PDF email report functionality for Pro users only
 - User activity tracking for Pro accounts
 - White-label report options for Pro accounts
 

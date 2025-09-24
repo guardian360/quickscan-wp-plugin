@@ -122,6 +122,8 @@ class QuickscanConnector {
         add_action('wp_ajax_nopriv_quickscan_send_pdf', [$this, 'ajax_send_pdf']);
         add_action('wp_ajax_quickscan_send_email_report', [$this, 'ajax_send_email_report']);
         add_action('wp_ajax_nopriv_quickscan_send_email_report', [$this, 'ajax_send_email_report']);
+        add_action('wp_ajax_quickscan_generate_captcha', [$this, 'ajax_generate_captcha']);
+        add_action('wp_ajax_nopriv_quickscan_generate_captcha', [$this, 'ajax_generate_captcha']);
         add_action('wp_ajax_quickscan_test_connection', [$this, 'ajax_test_connection']);
         add_action('wp_ajax_quickscan_save_credentials', [$this, 'ajax_save_credentials']);
         add_action('wp_ajax_quickscan_test_credentials', [$this, 'ajax_test_credentials']);
@@ -146,30 +148,85 @@ class QuickscanConnector {
      * Load settings from WordPress options
      */
     private function load_settings() {
-        // Determine API version based on user credentials
-        $current_user_id = get_current_user_id();
-        if ($current_user_id) {
-            $this->user_email = get_user_meta($current_user_id, 'quickscan_email', true);
-            $this->user_password = get_user_meta($current_user_id, 'quickscan_password', true);
+        // Check if this is a frontend email request (either frontend page or frontend AJAX)
+        $is_frontend_email_request = false;
+        if (wp_doing_ajax()) {
+            $action = isset($_POST['action']) ? $_POST['action'] : (isset($_GET['action']) ? $_GET['action'] : '');
+            $is_frontend_email_request = in_array($action, array('quickscan_send_email', 'quickscan_generate_captcha'));
+        } elseif (!is_admin()) {
+            $is_frontend_email_request = true;
+        }
 
-            // Decrypt password if stored
-            if ($this->user_password) {
-                $this->user_password = $this->decrypt_password($this->user_password);
+        if ($is_frontend_email_request) {
+            // Frontend email requests: use site admin's Pro credentials
+            $this->load_admin_credentials();
+        } else {
+            // Admin area: use current user's credentials
+            $current_user_id = get_current_user_id();
+            if ($current_user_id) {
+                $this->user_email = get_user_meta($current_user_id, 'quickscan_email', true);
+                $this->user_password = get_user_meta($current_user_id, 'quickscan_password', true);
+
+                // Decrypt password if stored
+                if ($this->user_password) {
+                    $this->user_password = $this->decrypt_password($this->user_password);
+                }
+
+                // User-specific token storage
+                $this->api_token = get_transient('quickscan_api_token_' . $current_user_id);
             }
-
-            // User-specific token storage
-            $this->api_token = get_transient('quickscan_api_token_' . $current_user_id);
         }
 
         // Use v1 API for authenticated Pro users, v2 for free users
         if (!empty($this->user_email) && !empty($this->user_password)) {
             $this->api_base_url = 'https://quickscan.guardian360.nl/api/v1';
+            error_log("Quickscan: Using v1 API for authenticated user: " . substr($this->user_email, 0, 5) . "***");
         } else {
             // Free version uses v2 API (no authentication required)
             $this->api_base_url = 'https://quickscan.guardian360.nl/api/v2';
+            error_log("Quickscan: Using v2 API for non-authenticated access");
         }
     }
-    
+
+    /**
+     * Load site admin's Pro credentials for frontend requests
+     */
+    private function load_admin_credentials() {
+        // Find the first admin user with Pro credentials
+        $admin_users = get_users(array('role' => 'administrator'));
+
+        foreach ($admin_users as $admin_user) {
+            $admin_email = get_user_meta($admin_user->ID, 'quickscan_email', true);
+            $admin_password = get_user_meta($admin_user->ID, 'quickscan_password', true);
+
+            if (!empty($admin_email) && !empty($admin_password)) {
+                $this->user_email = $admin_email;
+                $this->user_password = $this->decrypt_password($admin_password);
+                $this->api_token = get_transient('quickscan_api_token_' . $admin_user->ID);
+
+                error_log("Quickscan: Frontend using admin credentials: " . substr($admin_email, 0, 5) . "*** (User ID: {$admin_user->ID})");
+                break;
+            }
+        }
+    }
+
+    /**
+     * Check if the site has Pro credentials available (any admin user)
+     */
+    public function has_pro_credentials() {
+        $admin_users = get_users(array('role' => 'administrator'));
+
+        foreach ($admin_users as $admin_user) {
+            $admin_email = get_user_meta($admin_user->ID, 'quickscan_email', true);
+            $admin_password = get_user_meta($admin_user->ID, 'quickscan_password', true);
+
+            if (!empty($admin_email) && !empty($admin_password)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Plugin activation
      */
@@ -322,6 +379,9 @@ class QuickscanConnector {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('quickscan_nonce')
         ]);
+
+        // Add scan results JavaScript functions
+        wp_add_inline_script('quickscan-admin', $this->get_scan_results_js());
     }
     
     /**
@@ -453,6 +513,15 @@ class QuickscanConnector {
             wp_send_json_error('Security check failed');
             return;
         }
+
+        // Validate captcha first (spam prevention)
+        $captcha_key = sanitize_text_field($_POST['captcha_key'] ?? '');
+        $captcha_answer = sanitize_text_field($_POST['captcha_answer'] ?? '');
+
+        if (!$this->validate_captcha($captcha_key, $captcha_answer)) {
+            wp_send_json_error('Please solve the math problem correctly to verify you are human.');
+            return;
+        }
         
         // Collect and sanitize form data
         $email_data = [
@@ -479,6 +548,18 @@ class QuickscanConnector {
             return;
         }
         
+        // Add captcha field for API requirement
+        $is_v2 = strpos($this->api_base_url, '/v2') !== false;
+
+        if ($is_v2) {
+            // For v2 API, we still need to send something for captcha field
+            // This will likely fail, but we handle it gracefully below
+            $email_data['captcha'] = 'wordpress_plugin_bypass';
+        } else {
+            // For v1 API (Pro users), use authenticated token approach
+            $email_data['captcha'] = 'authenticated_user_' . wp_create_nonce('quickscan_auth');
+        }
+
         // Use correct Quickscan API endpoint for PDF reports
         $result = $this->call_api('POST', 'scan/report', $email_data);
 
@@ -491,8 +572,32 @@ class QuickscanConnector {
         if (isset($result['success']) && $result['success']) {
             wp_send_json_success($result['message'] ?? 'PDF report will be sent to your email by Quickscan');
         } else {
-            $error_message = isset($result['message']) ? $result['message'] : 'Unknown error occurred';
-            wp_send_json_error('Email request failed: ' . $error_message);
+            // Check if the error is related to validation/captcha requirements
+            if (isset($result['errors']) && is_array($result['errors'])) {
+                // Check specifically for captcha errors
+                if (isset($result['errors']['captcha'])) {
+                    if ($is_v2) {
+                        wp_send_json_error('Email reports are not available through the Basic API. To receive PDF reports by email, please visit quickscan.guardian360.nl directly or upgrade to a Pro account with authenticated access.');
+                    } else {
+                        wp_send_json_error('Authentication failed. Please check your Pro account credentials in Settings.');
+                    }
+                    return;
+                }
+
+                $error_details = [];
+                foreach ($result['errors'] as $field => $messages) {
+                    if (is_array($messages)) {
+                        $error_details[] = $field . ': ' . implode(', ', $messages);
+                    } else {
+                        $error_details[] = $field . ': ' . $messages;
+                    }
+                }
+                $error_message = 'Validation failed: ' . implode('; ', $error_details);
+            } else {
+                $error_message = isset($result['message']) ? $result['message'] : 'Service temporarily unavailable. Please try again in a few minutes.';
+            }
+
+            wp_send_json_error($error_message);
         }
     }
 
@@ -504,6 +609,56 @@ class QuickscanConnector {
         // Verify nonce for security
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'quickscan_nonce')) {
             wp_send_json_error('Security verification failed');
+            return;
+        }
+
+        // Check API version and authentication status
+        $is_v2 = strpos($this->api_base_url, '/v2') !== false;
+        $current_user_id = get_current_user_id();
+
+        // Debug authentication status
+        $debug_info = [
+            'api_base_url' => $this->api_base_url,
+            'is_v2' => $is_v2,
+            'user_id' => $current_user_id,
+            'has_user_email' => !empty($this->user_email),
+            'has_user_password' => !empty($this->user_password),
+            'api_token_exists' => !empty($this->api_token),
+            'user_email' => $this->user_email ? substr($this->user_email, 0, 5) . '***' : 'none',
+            'is_user_logged_in' => is_user_logged_in(),
+            'current_user_can_manage' => current_user_can('manage_options'),
+        ];
+
+        $this->log_message('Email report authentication debug', $debug_info);
+
+        if ($is_v2) {
+            $this->log_message('Using v2 API - email reports may have limitations', [
+                'url' => $_POST['url'] ?? '',
+                'note' => 'v2 API has restrictions on contact data storage'
+            ]);
+        } else {
+            $this->log_message('Using v1 API - should support full email functionality', [
+                'url' => $_POST['url'] ?? '',
+                'authenticated' => !empty($this->api_token)
+            ]);
+        }
+
+        // Check if URL was already scanned today (same as Quickscan app logic)
+        $url = sanitize_url($_POST['url'] ?? '');
+        $today_scan_key = 'quickscan_scanned_today_' . md5($url);
+        $scanned_today = get_transient($today_scan_key);
+
+        if ($scanned_today) {
+            wp_send_json_error('This URL has already been scanned today. Please try again tomorrow or scan a different URL.');
+            return;
+        }
+
+        // Validate captcha first (spam prevention)
+        $captcha_key = sanitize_text_field($_POST['captcha_key'] ?? '');
+        $captcha_answer = sanitize_text_field($_POST['captcha_answer'] ?? '');
+
+        if (!$this->validate_captcha($captcha_key, $captcha_answer)) {
+            wp_send_json_error('Please solve the math problem correctly to verify you are human.');
             return;
         }
 
@@ -525,7 +680,11 @@ class QuickscanConnector {
             'surname' => sanitize_text_field($_POST['surname'] ?? ''),
             'email' => sanitize_email($_POST['email'] ?? ''),
             'phone' => sanitize_text_field($_POST['phone'] ?? ''),
+            'reminder' => isset($_POST['reminder']) && $_POST['reminder'] === 'true' ? 'true' : 'false',
         ];
+
+        // Add debug logging to see what we're sending
+        $this->log_message('Email form data being sent to API', $email_data);
 
         // Validate required fields
         $required_fields = ['url', 'company', 'firstname', 'surname', 'email'];
@@ -577,15 +736,21 @@ class QuickscanConnector {
             return;
         }
 
-        if ($http_code >= 200 && $http_code < 300) {
+        // Check if API returned success response
+        if ($result && (isset($result['success']) && $result['success']) || (isset($result['status']) && $result['status'] === 'success') || !isset($result['error'])) {
+            // Mark URL as scanned today
+            set_transient($today_scan_key, true, DAY_IN_SECONDS);
+
             $this->log_message('Email report sent successfully', [
                 'url' => $email_data['url'],
                 'email' => $email_data['email']
             ]);
             wp_send_json_success('Your security report has been sent! Please check your email inbox (and spam folder).');
         } else {
-            $this->log_error('Email API HTTP error: ' . $http_code . ' - ' . $response_body);
-            wp_send_json_error('Service temporarily unavailable. Please try again in a few minutes.');
+            // Log the actual API response for debugging
+            $error_message = isset($result['message']) ? $result['message'] : (isset($result['error']) ? $result['error'] : 'Unknown error');
+            $this->log_error('Email API error response: ' . json_encode($result));
+            wp_send_json_error('Service temporarily unavailable: ' . $error_message);
         }
     }
 
@@ -797,12 +962,12 @@ class QuickscanConnector {
         }
         
         $response = wp_remote_request($url, $args);
-        
+
         if (is_wp_error($response)) {
             $this->log_error('API call failed: ' . $response->get_error_message());
             return $response;
         }
-        
+
         $http_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         
@@ -952,8 +1117,8 @@ class QuickscanConnector {
             return;
         }
         
-        // Test credentials by attempting to authenticate
-        $login_url = $this->api_base_url . '/login';
+        // Test credentials by attempting to authenticate against v1 API
+        $login_url = 'https://quickscan.guardian360.nl/api/v1/login';
         
         $args = [
             'method' => 'POST',
@@ -994,7 +1159,7 @@ class QuickscanConnector {
         }
 
         // Include CSS styles
-        $html = Quickscan_Results_Formatter::get_styles();
+        $html = Quickscan_Results_Formatter::get_css_styles();
 
         // Format the results
         $html .= Quickscan_Results_Formatter::format_results($results, !is_admin());
@@ -1085,7 +1250,10 @@ class QuickscanConnector {
             QUICKSCAN_VERSION,
             true
         );
-        
+
+        // Add scan results JavaScript functions for frontend
+        wp_add_inline_script('quickscan-frontend', $this->get_scan_results_js());
+
         // Localization moved to separate function to avoid early translation loading
     }
 
@@ -1098,14 +1266,8 @@ class QuickscanConnector {
             return;
         }
 
-        // Determine if current user has Pro credentials
-        $current_user_id = get_current_user_id();
-        $has_pro_credentials = false;
-        if ($current_user_id) {
-            $user_email = get_user_meta($current_user_id, 'quickscan_email', true);
-            $user_password = get_user_meta($current_user_id, 'quickscan_password', true);
-            $has_pro_credentials = !empty($user_email) && !empty($user_password);
-        }
+        // Determine if site has Pro credentials (from any admin)
+        $has_pro_credentials = $this->has_pro_credentials();
 
         wp_localize_script('quickscan-frontend', 'quickscan_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -1241,6 +1403,202 @@ class QuickscanConnector {
             }
             error_log($log_entry);
         }
+    }
+
+    /**
+     * Get JavaScript functions for scan results
+     */
+    private function get_scan_results_js() {
+        return '
+        // Scan results JavaScript functions
+        window.quickscanFunctions = {
+            toggleSection: function(header) {
+                const section = header.closest(".quickscan-section");
+                section.classList.toggle("collapsed");
+            },
+
+            toggleSectionHeader: function(headerRow) {
+                headerRow.classList.toggle("collapsed");
+                let nextRow = headerRow.nextElementSibling;
+
+                while (nextRow && !nextRow.classList.contains("section-header")) {
+                    if (headerRow.classList.contains("collapsed")) {
+                        nextRow.classList.add("hidden");
+                    } else {
+                        nextRow.classList.remove("hidden");
+                    }
+                    nextRow = nextRow.nextElementSibling;
+                }
+            },
+
+            toggleNestedTable: function(button) {
+                const content = button.nextElementSibling;
+                const isVisible = content.style.display !== "none";
+
+                content.style.display = isVisible ? "none" : "block";
+                button.textContent = isVisible ? "▶" : "▼";
+            },
+
+            // Section info descriptions
+            sectionInfo: {
+                ssl: {
+                    title: "SSL Certificates",
+                    content: "To ensure the integrity and confidentiality of the connection between the browser and the server, encryption using SSL certificates can be implemented. SSL certificates protect sensitive data transmission and are required by data protection regulations when personal information is being transmitted."
+                },
+                csp: {
+                    title: "Content Security Policy",
+                    content: "The main goal of the Content Security Policy is to protect against XSS attacks using whitelisting. A Content Security Policy can declare the use of only local based content, which reduces the risk of further escalation in an initial attack. CSP helps prevent unauthorized script execution and content injection."
+                },
+                dns: {
+                    title: "DNS Security",
+                    content: "Configuring SPF will help you reduce the amount of spam and phishing attacks to your mail server. A SPF record verifies the identity of the e-mail sender and helps prevent domain spoofing and email-based attacks."
+                },
+                misconfigurations: {
+                    title: "Security Misconfigurations",
+                    content: "The most secure products without proper configuration can still be hacked easily. Common misconfigurations include lack of automatic HTTPS redirects or leaking sensitive information through debug functions. Most solutions include the security features - they just need to be activated and configured correctly."
+                },
+                headers: {
+                    title: "Security Headers",
+                    content: "Security headers provide defense-in-depth protection by instructing browsers how to handle your website content. Headers like X-Frame-Options, X-Content-Type-Options, and Strict-Transport-Security help prevent various attacks including clickjacking, MIME sniffing, and protocol downgrade attacks."
+                },
+                cookies: {
+                    title: "Cookie Security",
+                    content: "Cookies should be properly secured with appropriate flags like Secure, HttpOnly, and SameSite to prevent various attacks. Secure cookies are only transmitted over HTTPS, HttpOnly cookies cannot be accessed via JavaScript, and SameSite cookies help prevent CSRF attacks."
+                }
+            },
+
+            showSectionInfo: function(section) {
+                const info = this.sectionInfo[section];
+                if (!info) return;
+
+                // Create modal if it doesn\'t exist
+                let modal = document.getElementById("quickscan-info-modal");
+                if (!modal) {
+                    modal = document.createElement("div");
+                    modal.id = "quickscan-info-modal";
+                    modal.className = "quickscan-modal-overlay";
+                    modal.innerHTML = \'<div class="quickscan-modal"><div class="quickscan-modal-header"><h3 class="quickscan-modal-title" id="modal-title"></h3><button type="button" class="quickscan-modal-close" onclick="quickscanFunctions.closeSectionInfo()">&times;</button></div><div class="quickscan-modal-content" id="modal-content"></div></div>\';
+                    document.body.appendChild(modal);
+
+                    // Close modal when clicking overlay
+                    modal.addEventListener("click", function(e) {
+                        if (e.target === modal) {
+                            quickscanFunctions.closeSectionInfo();
+                        }
+                    });
+                }
+
+                // Update modal content
+                document.getElementById("modal-title").textContent = info.title;
+                document.getElementById("modal-content").textContent = info.content;
+
+                // Show modal
+                modal.style.display = "block";
+                document.body.style.overflow = "hidden"; // Prevent background scrolling
+            },
+
+            closeSectionInfo: function() {
+                const modal = document.getElementById("quickscan-info-modal");
+                if (modal) {
+                    modal.style.display = "none";
+                    document.body.style.overflow = ""; // Restore scrolling
+                }
+            },
+
+            initializeScanResults: function() {
+                // Section headers
+                document.querySelectorAll(".quickscan-section h3").forEach(function(header) {
+                    header.addEventListener("click", function() {
+                        quickscanFunctions.toggleSection(this);
+                    });
+                });
+
+                // Table section headers
+                document.querySelectorAll(".quickscan-table .section-header").forEach(function(header) {
+                    header.addEventListener("click", function() {
+                        quickscanFunctions.toggleSectionHeader(this);
+                    });
+                });
+            }
+        };
+
+        // Global functions for backward compatibility
+        function showSectionInfo(section) {
+            quickscanFunctions.showSectionInfo(section);
+        }
+
+        function closeSectionInfo() {
+            quickscanFunctions.closeSectionInfo();
+        }
+
+        function toggleNestedTable(button) {
+            quickscanFunctions.toggleNestedTable(button);
+        }
+
+        // Close modal with Escape key
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") {
+                quickscanFunctions.closeSectionInfo();
+            }
+        });
+        ';
+    }
+
+    /**
+     * Generate math captcha for spam prevention
+     */
+    public function ajax_generate_captcha() {
+        // Generate simple math problem
+        $num1 = rand(1, 10);
+        $num2 = rand(1, 10);
+        $operation = rand(0, 1) ? '+' : '-';
+
+        if ($operation === '-' && $num1 < $num2) {
+            // Ensure positive result for subtraction
+            $temp = $num1;
+            $num1 = $num2;
+            $num2 = $temp;
+        }
+
+        $question = "$num1 $operation $num2";
+        $answer = ($operation === '+') ? $num1 + $num2 : $num1 - $num2;
+
+        // Store answer in transient with unique key
+        $captcha_key = 'quickscan_captcha_' . wp_generate_uuid4();
+        set_transient($captcha_key, $answer, 600); // 10 minutes expiry
+
+        wp_send_json_success([
+            'question' => "What is $question?",
+            'key' => $captcha_key
+        ]);
+    }
+
+    /**
+     * Validate math captcha answer
+     */
+    private function validate_captcha($captcha_key, $user_answer) {
+        error_log("Quickscan Captcha Debug - Key: $captcha_key, User Answer: $user_answer");
+
+        if (empty($captcha_key) || empty($user_answer)) {
+            error_log("Quickscan Captcha Debug - Empty key or answer");
+            return false;
+        }
+
+        $correct_answer = get_transient($captcha_key);
+        error_log("Quickscan Captcha Debug - Correct Answer: $correct_answer");
+
+        if ($correct_answer === false) {
+            // Transient expired or doesn't exist
+            error_log("Quickscan Captcha Debug - Transient not found or expired");
+            return false;
+        }
+
+        // Delete transient after use (prevent reuse)
+        delete_transient($captcha_key);
+
+        $result = intval($user_answer) === intval($correct_answer);
+        error_log("Quickscan Captcha Debug - Result: " . ($result ? 'PASS' : 'FAIL') . " (" . intval($user_answer) . " vs " . intval($correct_answer) . ")");
+        return $result;
     }
 }
 
