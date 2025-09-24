@@ -146,56 +146,35 @@ $has_credentials = !empty($stored_email);
     </div>
     
     <hr />
-    
+
     <!-- Plugin Settings -->
-    <form method="post" action="options.php">
-        <?php settings_fields('quickscan_settings'); ?>
-        
-        <!-- API Configuration Notice -->
-        <div class="notice notice-info inline" style="margin: 20px 0; padding: 15px;">
-            <h3 style="margin-top: 0;"><?php _e('API Configuration', 'quickscan-connector'); ?></h3>
-            <p><?php _e('This plugin connects to the Guardian360 Quickscan API v1:', 'quickscan-connector'); ?></p>
-            <p><strong><?php _e('API Endpoint:', 'quickscan-connector'); ?></strong> <code>https://quickscan.guardian360.nl/api/v1</code></p>
-            <p><?php _e('Results are displayed in English and stored in your Quickscan account.', 'quickscan-connector'); ?></p>
-        </div>
-        
-        <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="quickscan_enable_logging"><?php _e('Enable Logging', 'quickscan-connector'); ?></label>
-                </th>
-                <td>
-                    <input type="checkbox" 
-                           id="quickscan_enable_logging" 
-                           name="quickscan_enable_logging" 
-                           value="1" 
-                           <?php checked(get_option('quickscan_enable_logging', false)); ?> />
-                    <p class="description">
-                        <?php _e('Log API errors and debug information', 'quickscan-connector'); ?>
-                    </p>
-                </td>
-            </tr>
-            
-            <tr>
-                <th scope="row">
-                    <label for="quickscan_show_signature"><?php _e('Show Guardian360 Signature', 'quickscan-connector'); ?></label>
-                </th>
-                <td>
-                    <input type="checkbox" 
-                           id="quickscan_show_signature" 
-                           name="quickscan_show_signature" 
-                           value="1" 
-                           <?php checked(get_option('quickscan_show_signature', true)); ?> />
-                    <p class="description">
-                        <?php _e('Display a small Guardian360 link below frontend scanners. Help support the project!', 'quickscan-connector'); ?>
-                    </p>
-                </td>
-            </tr>
-            
-        </table>
-        
-        <?php submit_button(); ?>
-    </form>
+    <div class="card" style="margin: 0 auto; max-width: 1000px;">
+        <h2><?php _e('Plugin Settings', 'quickscan-connector'); ?></h2>
+
+        <form method="post" action="options.php">
+            <?php settings_fields('quickscan_settings'); ?>
+
+            <table class="form-table">
+                <tr>
+                    <th scope="row">
+                        <label for="quickscan_show_signature"><?php _e('Show Guardian360 Signature', 'quickscan-connector'); ?></label>
+                    </th>
+                    <td>
+                        <input type="checkbox"
+                               id="quickscan_show_signature"
+                               name="quickscan_show_signature"
+                               value="1"
+                               <?php checked(get_option('quickscan_show_signature', true)); ?> />
+                        <p class="description">
+                            <?php _e('Display a small Guardian360 link below frontend scanners. Help support the project!', 'quickscan-connector'); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php submit_button(); ?>
+        </form>
+    </div>
 </div>
 
 <script>
