@@ -226,8 +226,9 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<div class="quickscan-signature" style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">';
 
             if (quickscan_ajax.signature_style === 'logo') {
+                html += '<div style="font-size: 11px; color: #999; margin-bottom: 8px;">' + quickscan_ajax.signature_text + '</div>';
                 html += '<a href="' + quickscan_ajax.signature_url + '" target="_blank" rel="noopener noreferrer">';
-                html += '<img src="' + quickscan_ajax.logo_url + '" alt="Guardian360 Quickscan" style="width: 200px; height: auto; opacity: 0.7; transition: opacity 0.3s ease;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">';
+                html += '<img src="' + quickscan_ajax.logo_url + '" alt="Guardian360 Quickscan Security Scanner" title="Visit Guardian360 Quickscan on GitHub" style="width: 200px; height: auto; opacity: 0.7; transition: opacity 0.3s ease;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">';
                 html += '</a>';
             } else {
                 html += '<a href="' + quickscan_ajax.signature_url + '" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #999; text-decoration: none;">';

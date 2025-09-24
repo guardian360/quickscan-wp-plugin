@@ -67,9 +67,13 @@ if (!defined('ABSPATH')) {
             <?php
             $signature_style = get_option('quickscan_signature_style', 'logo');
             if ($signature_style === 'logo'): ?>
+                <div style="font-size: 11px; color: #999; margin-bottom: 8px;">
+                    ⚡ <?php echo esc_html(__('Powered by Guardian360', 'quickscan-connector')); ?>
+                </div>
                 <a href="https://github.com/guardian360/quickscan-wp-plugin" target="_blank" rel="noopener noreferrer">
                     <img src="<?php echo QUICKSCAN_PLUGIN_URL; ?>assets/images/logo_guardian360_quickscan.png"
-                         alt="Guardian360 Quickscan"
+                         alt="Guardian360 Quickscan Security Scanner"
+                         title="Visit Guardian360 Quickscan on GitHub"
                          style="width: 200px; height: auto; opacity: 0.7; transition: opacity 0.3s ease;"
                          onmouseover="this.style.opacity='1'"
                          onmouseout="this.style.opacity='0.7'" />
