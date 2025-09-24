@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('QUICKSCAN_VERSION', '1.0.0');
+define('QUICKSCAN_VERSION', '1.0.1');
 define('QUICKSCAN_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('QUICKSCAN_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('QUICKSCAN_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -477,26 +477,20 @@ class QuickscanConnector {
             return;
         }
         
-        // Forward request to Quickscan API - Quickscan handles PDF generation and email sending
-        $response = wp_remote_post('https://quickscan.guardian360.nl/scan/results', [
-            'body' => $email_data,
-            'timeout' => 30,
-            'headers' => [
-                'Accept' => 'application/json',
-            ]
-        ]);
-        
-        if (is_wp_error($response)) {
-            wp_send_json_error('Failed to connect to Quickscan service: ' . $response->get_error_message());
+        // Use correct Quickscan API endpoint for PDF reports
+        $result = $this->call_api('POST', 'scan/report', $email_data);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error('Failed to send email request: ' . $result->get_error_message());
             return;
         }
-        
-        $http_code = wp_remote_retrieve_response_code($response);
-        if ($http_code >= 200 && $http_code < 300) {
-            // Quickscan successfully received the request and will send the PDF
-            wp_send_json_success('PDF report will be sent to your email by Quickscan');
+
+        // Handle Quickscan API response format
+        if (isset($result['success']) && $result['success']) {
+            wp_send_json_success($result['message'] ?? 'PDF report will be sent to your email by Quickscan');
         } else {
-            wp_send_json_error('Quickscan service error. Please try again later.');
+            $error_message = isset($result['message']) ? $result['message'] : 'Unknown error occurred';
+            wp_send_json_error('Email request failed: ' . $error_message);
         }
     }
 
@@ -562,30 +556,24 @@ class QuickscanConnector {
         ]);
 
         // Forward request to Quickscan API
-        $response = wp_remote_post('https://quickscan.guardian360.nl/scan/results', [
-            'body' => array_merge($email_data, [
-                'source' => 'wordpress_plugin',
-                'plugin_version' => QUICKSCAN_VERSION,
-                'site_url' => home_url()
-            ]),
-            'timeout' => 30,
-            'headers' => [
-                'Accept' => 'application/json',
-                'User-Agent' => 'Quickscan-WordPress-Plugin/' . QUICKSCAN_VERSION,
-            ]
+        // Add WordPress plugin metadata to the request
+        $request_data = array_merge($email_data, [
+            'source' => 'wordpress_plugin',
+            'plugin_version' => QUICKSCAN_VERSION,
+            'site_url' => home_url()
         ]);
+
+        // Use correct Quickscan API endpoint for PDF reports
+        $result = $this->call_api('POST', 'scan/report', $request_data);
 
         // Update rate limiting counter
         set_transient($rate_limit_key, ($rate_limit_count ? $rate_limit_count + 1 : 1), HOUR_IN_SECONDS);
 
-        if (is_wp_error($response)) {
-            $this->log_error('Email API error: ' . $response->get_error_message());
+        if (is_wp_error($result)) {
+            $this->log_error('Email API error: ' . $result->get_error_message());
             wp_send_json_error('Unable to connect to email service. Please try again later.');
             return;
         }
-
-        $http_code = wp_remote_retrieve_response_code($response);
-        $response_body = wp_remote_retrieve_body($response);
 
         if ($http_code >= 200 && $http_code < 300) {
             $this->log_message('Email report sent successfully', [
@@ -1205,6 +1193,19 @@ class QuickscanConnector {
             error_log('[Quickscan Connector] ' . $message);
         }
     }
+
+    /**
+     * Log general messages with optional data
+     */
+    private function log_message($message, $data = []) {
+        if (get_option('quickscan_enable_logging')) {
+            $log_entry = '[Quickscan Connector] ' . $message;
+            if (!empty($data)) {
+                $log_entry .= ' | Data: ' . json_encode($data);
+            }
+            error_log($log_entry);
+        }
+    }
 }
 
 /**
@@ -1215,9 +1216,9 @@ class Quickscan_Security_Widget extends WP_Widget {
     public function __construct() {
         parent::__construct(
             'quickscan_security_widget',
-            __('Security Scanner', 'quickscan-connector'),
+            'Security Scanner', // Use literal string to avoid early translation loading
             [
-                'description' => __('Add a security scanner form to scan websites for vulnerabilities', 'quickscan-connector'),
+                'description' => 'Add a security scanner form to scan websites for vulnerabilities', // Use literal string
                 'classname' => 'quickscan-security-widget'
             ]
         );
@@ -1248,7 +1249,7 @@ class Quickscan_Security_Widget extends WP_Widget {
     }
     
     public function form($instance) {
-        $title = isset($instance['title']) ? $instance['title'] : __('Security Scanner', 'quickscan-connector');
+        $title = isset($instance['title']) ? $instance['title'] : 'Security Scanner'; // Use literal string
         $show_results = isset($instance['show_results']) ? (bool) $instance['show_results'] : false;
         $placeholder = isset($instance['placeholder']) ? $instance['placeholder'] : 'Enter website URL...';
         $button_text = isset($instance['button_text']) ? $instance['button_text'] : 'Scan';
