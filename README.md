@@ -2,7 +2,7 @@
 
 [![Download Plugin](https://img.shields.io/badge/Download-WordPress%20Plugin-blue?style=for-the-badge&logo=wordpress)](./quickscan-connector.zip)
 
-**[📦 Download quickscan-connector.zip](./quickscan-connector.zip)** | **[📖 View Documentation](#installation)** | **[🌟 Request Pro Account](https://quickscan.guardian360.nl/request-account)**
+**[📦 Download quickscan-connector.zip](./quickscan-connector.zip)** | **[📖 View Documentation](#installation)** | **[🌟 Request Pro Account](https://guardian360.eu/contact-us/)**
 
 ---
 
