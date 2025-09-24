@@ -234,7 +234,7 @@ jQuery(document).ready(function($) {
             action: 'quickscan_test_credentials',
             email: email,
             password: password,
-            nonce: quickscan_ajax.nonce
+            nonce: '<?php echo wp_create_nonce('quickscan_nonce'); ?>'
         }, function(response) {
             if (response.success) {
                 $result.html('<div class="notice notice-success"><p>' + response.data + '</p></div>');
@@ -277,7 +277,7 @@ jQuery(document).ready(function($) {
             email: email,
             password: password,
             use_wp_credentials: accountType === 'wordpress',
-            nonce: quickscan_ajax.nonce
+            nonce: '<?php echo wp_create_nonce('quickscan_nonce'); ?>'
         }, function(response) {
             if (response.success) {
                 $result.html('<div class="notice notice-success"><p>' + response.data + '</p></div>');
@@ -294,14 +294,18 @@ jQuery(document).ready(function($) {
     $('#clear-credentials').on('click', function() {
         if (confirm('Are you sure you want to clear your Quickscan credentials?')) {
             const $result = $('#credential-result');
-            
+
             $.post(ajaxurl, {
                 action: 'quickscan_save_credentials',
                 email: '',
                 password: '',
-                nonce: quickscan_ajax.nonce
+                nonce: '<?php echo wp_create_nonce('quickscan_nonce'); ?>'
             }, function(response) {
-                location.reload(); // Refresh page
+                if (response.success) {
+                    location.reload(); // Refresh page
+                } else {
+                    $result.html('<div class="notice notice-error"><p>' + (response.data || 'Failed to clear credentials') + '</p></div>');
+                }
             });
         }
     });
