@@ -60,6 +60,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
 
                             <input type="hidden" name="url" id="scan-url-input">
+                            <input type="hidden" name="form_timestamp" id="form-timestamp">
+
+                            <!-- Honeypot field - Hidden from users, bots will fill it -->
+                            <div style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
+                                <label for="website">Website (do not fill)</label>
+                                <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                            </div>
 
                             <!-- Reminder Checkbox -->
                             <div style="margin-bottom: 15px;">
@@ -250,6 +257,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Set scan URL in modal input');
             }
 
+            // Set form timestamp for anti-spam timing check
+            const timestampInput = document.getElementById('form-timestamp');
+            if (timestampInput) {
+                timestampInput.value = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+                console.log('Set form timestamp:', timestampInput.value);
+            }
+
             // Reset form
             const form = document.getElementById('quickscan-email-form');
             if (form) {
@@ -300,11 +314,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if quickscan_ajax is available
         if (typeof quickscan_ajax === 'undefined') {
             console.error('quickscan_ajax not available');
-            questionSpan.textContent = 'Captcha unavailable';
+            questionSpan.innerHTML = 'Captcha unavailable';
             return;
         }
 
-        questionSpan.textContent = 'Loading...';
+        questionSpan.innerHTML = 'Loading...';
         answerInput.value = '';
 
         fetch(quickscan_ajax.ajax_url, {

@@ -643,17 +643,46 @@ class QuickscanConnector {
             ]);
         }
 
-        // Check if URL was already scanned today (same as Quickscan app logic)
-        $url = sanitize_url($_POST['url'] ?? '');
-        $today_scan_key = 'quickscan_scanned_today_' . md5($url);
-        $scanned_today = get_transient($today_scan_key);
+        // ANTI-SPAM VALIDATION - Multiple layers of protection
 
-        if ($scanned_today) {
-            wp_send_json_error('This URL has already been scanned today. Please try again tomorrow or scan a different URL.');
+        // 1. Honeypot field check (should be empty - bots fill it)
+        $honeypot = sanitize_text_field($_POST['website'] ?? '');
+        if (!empty($honeypot)) {
+            // Silently reject - don't tell bots they failed
+            $this->log_message('Honeypot triggered - bot detected', [
+                'honeypot_value' => $honeypot,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ]);
+            wp_send_json_error('Please try again.');
             return;
         }
 
-        // Validate captcha first (spam prevention)
+        // 2. Timing check (form must be open for at least 3 seconds - humans can't fill it faster)
+        $form_timestamp = intval($_POST['form_timestamp'] ?? 0);
+        $current_time = time();
+        $time_diff = $current_time - $form_timestamp;
+
+        if ($time_diff < 3) {
+            $this->log_message('Form submitted too quickly - likely bot', [
+                'time_diff' => $time_diff,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ]);
+            wp_send_json_error('Please take your time filling out the form.');
+            return;
+        }
+
+        // 3. Validate user agent exists (basic bot detection)
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        if (empty($user_agent) || strlen($user_agent) < 10) {
+            $this->log_message('Invalid or missing user agent - likely bot', [
+                'user_agent' => $user_agent,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ]);
+            wp_send_json_error('Invalid request.');
+            return;
+        }
+
+        // 4. Validate captcha (spam prevention)
         $captcha_key = sanitize_text_field($_POST['captcha_key'] ?? '');
         $captcha_answer = sanitize_text_field($_POST['captcha_answer'] ?? '');
 
@@ -662,17 +691,8 @@ class QuickscanConnector {
             return;
         }
 
-        // Rate limiting check (simple implementation)
-        $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        $rate_limit_key = 'quickscan_email_rate_' . md5($client_ip);
-        $rate_limit_count = get_transient($rate_limit_key);
-
-        if ($rate_limit_count && $rate_limit_count >= 5) {
-            wp_send_json_error('Rate limit exceeded. Please wait before sending another email.');
-            return;
-        }
-
         // Collect and sanitize form data
+        $url = sanitize_url($_POST['url'] ?? '');
         $email_data = [
             'url' => sanitize_url($_POST['url'] ?? ''),
             'company' => sanitize_text_field($_POST['company'] ?? ''),
@@ -718,6 +738,8 @@ class QuickscanConnector {
 
         // Forward request to Quickscan API
         // Add WordPress plugin metadata to the request
+        // Note: Captcha validation happens in WordPress only, not sent to API
+        // API no longer requires captcha field for /api/ requests
         $request_data = array_merge($email_data, [
             'source' => 'wordpress_plugin',
             'plugin_version' => QUICKSCAN_VERSION,
@@ -727,8 +749,11 @@ class QuickscanConnector {
         // Use correct Quickscan API endpoint for PDF reports
         $result = $this->call_api('POST', 'scan/report', $request_data);
 
-        // Update rate limiting counter
-        set_transient($rate_limit_key, ($rate_limit_count ? $rate_limit_count + 1 : 1), HOUR_IN_SECONDS);
+        // Log the full API response for debugging
+        $this->log_message('QuickScan API Response', [
+            'result' => $result,
+            'is_wp_error' => is_wp_error($result)
+        ]);
 
         if (is_wp_error($result)) {
             $this->log_error('Email API error: ' . $result->get_error_message());
@@ -738,9 +763,6 @@ class QuickscanConnector {
 
         // Check if API returned success response
         if ($result && (isset($result['success']) && $result['success']) || (isset($result['status']) && $result['status'] === 'success') || !isset($result['error'])) {
-            // Mark URL as scanned today
-            set_transient($today_scan_key, true, DAY_IN_SECONDS);
-
             $this->log_message('Email report sent successfully', [
                 'url' => $email_data['url'],
                 'email' => $email_data['email']
@@ -948,15 +970,24 @@ class QuickscanConnector {
                 $query_string = http_build_query($data);
                 $url .= (strpos($url, '?') !== false ? '&' : '?') . $query_string;
             } elseif ($method === 'POST') {
-                // For scan endpoint, URL is passed as query parameter
-                if ($endpoint === 'scan' && isset($data['url'])) {
+                // For scan and scan/report endpoints, URL is passed as query parameter
+                if (($endpoint === 'scan' || $endpoint === 'scan/report') && isset($data['url'])) {
                     $url .= '?url=' . urlencode($data['url']);
                     unset($data['url']); // Remove from data since it's in query string
                 }
-                
+
                 // Add remaining data as form fields
                 if (!empty($data)) {
                     $args['body'] = $data;
+
+                    // Debug logging for scan/report endpoint
+                    if ($endpoint === 'scan/report') {
+                        $this->log_message('API call_api() sending to ' . $url, [
+                            'endpoint' => $endpoint,
+                            'body_keys' => array_keys($data),
+                            'body' => $data
+                        ]);
+                    }
                 }
             }
         }
